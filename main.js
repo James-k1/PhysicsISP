@@ -151,7 +151,7 @@ const ctx = canvas.getContext('2d')
 ctx.translate(long/2, tall/2)
 let running = true
 
-//Listener code was stolen https://stackoverflow.com/questions/4416505/how-to-take-keyboard-input-in-javascript
+// Event listener code was stolen https://stackoverflow.com/questions/4416505/how-to-take-keyboard-input-in-javascript
 window.addEventListener("keydown", function (event) {
   if (event.defaultPrevented) {
   }
@@ -184,6 +184,7 @@ function setup(){
 
   objects.push(new Body([100,-100], new Vector(0.3, Math.PI),[new Vector(0,0)], 10,9,500));
 
+  //inner circle
   // let amount = 10; 
   // let angleInc = (Math.PI * 2) / amount;
   // let angle = 0;
@@ -194,7 +195,7 @@ function setup(){
   //     angle += angleInc;
   // }
 
-
+  //outer circle
   // amount = 10; 
   // angleInc = (Math.PI * 2) / amount;
   // angle = 0;
@@ -216,20 +217,6 @@ function drawCircle(x, y, r){
     
 }
 
-
-
-// function pulleyForce(){
-//   for (object of objects) {
-//     netAcceleration = new Vector(0, 0);
-//     for (object2 of objects) {
-//       if (!object.equals(object2)){
-//         netAcceleration.add(new Vector((G*object.getMass())/Math.pow(object.getDistanceTo(object2), 2),Math.atan2(object2.getPos()[1]-object.getPos()[1], object2.getPos()[0]-object.getPos()[0])));
-//       }
-//     }
-//     object.setAccelerationAtIndex(0, netAcceleration);
-//   }
-
-// }
 function pulleyForce(){
   let stack = [...objects]
   for (object of stack){
