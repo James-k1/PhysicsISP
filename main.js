@@ -125,16 +125,6 @@ class Body {
       this.radius = radius;
     }
 
-
-
-
-
-
-
-
-
-
-
 }
 
 const G = 10
