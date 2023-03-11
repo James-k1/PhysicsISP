@@ -31,13 +31,13 @@ class Vector {
 }
 
 class Body {
-    constructor(pos, velocity, acceleration, mass, radius, terminalVelocity) {
+    constructor(pos, velocity, acceleration, mass, radius) {
       this.pos = pos;
       this.velocity = velocity;
       this.acceleration = acceleration;
       this.mass = mass;
       this.radius = radius;
-      this.terminalVelocity = terminalVelocity;
+      this.density = mass/(Math.PI*Math.pow(radius,2))
     }
   
     update() {
@@ -47,8 +47,8 @@ class Body {
       }
       this.velocity.add(netAcceleration);
   
-      this.pos[0] += Math.min(this.velocity.getMag(), this.terminalVelocity) * Math.cos(this.velocity.getDir());
-      this.pos[1] += Math.min(this.velocity.getMag(), this.terminalVelocity) * Math.sin(this.velocity.getDir());
+      this.pos[0] += this.velocity.getMag()* Math.cos(this.velocity.getDir());
+      this.pos[1] += this.velocity.getMag()* Math.sin(this.velocity.getDir());
     }
   
     equals(b) {
@@ -170,9 +170,9 @@ setup()
 
 
 function setup(){
-  objects.push(new Body([100,100], new Vector(0.3, 0),[new Vector(0,0)], 10,9,500));
+  objects.push(new Body([100,100], new Vector(0, 0),[new Vector(0,0)], 10,9));
 
-  objects.push(new Body([100,-100], new Vector(0.3, Math.PI),[new Vector(0,0)], 10,9,500));
+  objects.push(new Body([100,-100], new Vector(0, Math.PI),[new Vector(0,0)], 10,9));
 
   //inner circle
   // let amount = 10; 
@@ -180,7 +180,7 @@ function setup(){
   // let angle = 0;
   // let radius = 200;
   // for (let i = 0; i < amount; i++) {
-  //     objects.push(new Body([radius  * Math.cos(angle), radius  * Math.sin(angle)], new Vector(1 , angle - Math.PI/2),[new Vector(0,0)], 10,9,500));
+  //     objects.push(new Body([radius  * Math.cos(angle), radius  * Math.sin(angle)], new Vector(1 , angle - Math.PI/2),[new Vector(0,0)], 10,9));
       
   //     angle += angleInc;
   // }
@@ -191,7 +191,7 @@ function setup(){
   // angle = 0;
   // radius=400; 
   // for (let i = 0; i < amount; i++) {
-  //     objects.push(new Body([radius  * Math.cos(angle), radius  * Math.sin(angle)], new Vector(0.7 , angle +  Math.PI/2), [new Vector(0,0)] , 10,9,500));
+  //     objects.push(new Body([radius  * Math.cos(angle), radius  * Math.sin(angle)], new Vector(0.7 , angle +  Math.PI/2), [new Vector(0,0)] , 10,9));
       
   //     angle += angleInc;
   // }
@@ -212,6 +212,21 @@ function pulleyForce(){
   for (object of stack){
     object.clearAccelerationAtIndex(0)
   }
+  while(stack.length>1){
+    object = stack[0]
+    for (object2 of stack){
+      if (!object.equals(object2)){
+        let distanceSquared = Math.pow(object.getDistanceTo(object2), 2)
+        object.addAccelerationAtIndex(0,new Vector((G*object.getMass())/distanceSquared,Math.atan2(object2.getPos()[1]-object.getPos()[1], object2.getPos()[0]-object.getPos()[0])));
+        object2.addAccelerationAtIndex(0,new Vector((G*object2.getMass())/distanceSquared,Math.atan2(object.getPos()[1]-object2.getPos()[1], object.getPos()[0]-object2.getPos()[0])))
+      }
+    }
+    stack.splice(0,1)
+  }
+
+}
+function collisionDetection(){
+  let stack = [...objects]
   while(stack.length>1){
     object = stack[0]
     for (object2 of stack){
