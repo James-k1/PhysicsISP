@@ -170,20 +170,20 @@ setup()
 
 
 function setup(){
-  objects.push(new Body([100,100], new Vector(0, 0),[new Vector(0,0)], 10,9));
+  // objects.push(new Body([0,0], new Vector(0, 0),[new Vector(0,0)], 10,9));
 
-  objects.push(new Body([100,-100], new Vector(0, Math.PI),[new Vector(0,0)], 10,9));
+  // objects.push(new Body([100,0], new Vector(0, 0),[new Vector(0,0)], 10,9));
 
   //inner circle
-  // let amount = 10; 
-  // let angleInc = (Math.PI * 2) / amount;
-  // let angle = 0;
-  // let radius = 200;
-  // for (let i = 0; i < amount; i++) {
-  //     objects.push(new Body([radius  * Math.cos(angle), radius  * Math.sin(angle)], new Vector(1 , angle - Math.PI/2),[new Vector(0,0)], 10,9));
+  let amount = 10000; 
+  let angleInc = (Math.PI * 2) / amount;
+  let angle = 0;
+  let radius = 1000;
+  for (let i = 0; i < amount; i++) {
+      objects.push(new Body([radius  * Math.cos(angle), radius  * Math.sin(angle)], new Vector(1 , angle - Math.PI/2),[new Vector(0,0)], 10,9));
       
-  //     angle += angleInc;
-  // }
+      angle += angleInc;
+  }
 
   //outer circle
   // amount = 10; 
@@ -230,10 +230,12 @@ function collisionDetection(){
   while(stack.length>1){
     object = stack[0]
     for (object2 of stack){
-      if (!object.equals(object2)){
-        let distanceSquared = Math.pow(object.getDistanceTo(object2), 2)
-        object.addAccelerationAtIndex(0,new Vector((G*object.getMass())/distanceSquared,Math.atan2(object2.getPos()[1]-object.getPos()[1], object2.getPos()[0]-object.getPos()[0])));
-        object2.addAccelerationAtIndex(0,new Vector((G*object2.getMass())/distanceSquared,Math.atan2(object.getPos()[1]-object2.getPos()[1], object.getPos()[0]-object2.getPos()[0])))
+      if (!object.equals(object2) && object.getDistanceTo(object2) <= object.getRadius() + object2.getRadius()){
+        
+
+        // let distanceSquared = Math.pow(object.getDistanceTo(object2), 2)
+        // object.addAccelerationAtIndex(0,new Vector((G*object.getMass())/distanceSquared,Math.atan2(object2.getPos()[1]-object.getPos()[1], object2.getPos()[0]-object.getPos()[0])));
+        // object2.addAccelerationAtIndex(0,new Vector((G*object2.getMass())/distanceSquared,Math.atan2(object.getPos()[1]-object2.getPos()[1], object.getPos()[0]-object2.getPos()[0])))
       }
     }
     stack.splice(0,1)
@@ -253,7 +255,9 @@ function main(){
   
   if (running){
     ctx.clearRect(-long/2, -tall/2, long, tall);
+    console.time('pulleyForce')
     pulleyForce()
+    console.timeEnd('pulleyForce');
     updateObjects()
     end = new Date()
 
