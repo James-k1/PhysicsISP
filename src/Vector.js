@@ -11,11 +11,6 @@ export default class Vector {
       this.yComp+=v.getYComp()
       this.zComp+=v.getZComp()
     }
-    mult(s){
-        this.xComp*=s
-        this.yComp*=s
-        this.zComp*=s
-    }
     getXComp(){
         return this.xComp
     }

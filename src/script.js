@@ -20,7 +20,7 @@ const pointLight = new THREE.PointLight(0x0000ff, 10)
 pointLight.position.x = 0
 pointLight.position.y = 0
 pointLight.position.z = 0
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.1)
+const ambientLight = new THREE.AmbientLight(0xffffff, 2)
 scene.add(pointLight)
 scene.add(ambientLight)
 
@@ -42,6 +42,8 @@ window.addEventListener('resize', () =>
     // Update sizes
     sizes.width = window.innerWidth
     sizes.height = window.innerHeight
+    console.log(sizes.width)
+    console.log(sizes.height)
 
     // Update camera
     camera.aspect = sizes.width / sizes.height
@@ -56,10 +58,10 @@ window.addEventListener('resize', () =>
  * Camera
  */
 // Base camera
-const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 10000)
+const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100000)
 camera.position.x = 0
 camera.position.y = 0
-camera.position.z = 2000
+camera.position.z = 200
 scene.add(camera)
 
 // Controls
@@ -80,7 +82,8 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  * Simulation
  */
 let objects = [];
-let G = 10;
+let G = 6.67e-11;
+let scaleConstant = 10e-9
 setup()
 
 /**
@@ -101,7 +104,10 @@ const tick = () =>
    
     // console.log(pos[0]==300 && pos[1]==0 && pos[2]==0)
     calcGravity()
-    collisionDetection()
+    // console.timeEnd("calcGravity")
+    // console.time("collisionDetection")
+    // collisionDetection()
+    // console.timeEnd("collisionDetection")
     updateObjects()
     // let pos = objects[0].getPos()
     // camera.position.x = pos[0]
@@ -109,6 +115,7 @@ const tick = () =>
     // controls.target.set(pos[0],pos[1],pos[2])
     // console.log(pos)
     // Update Orbital Controls
+    console.log(objects[0])
     controls.update()
 
     // Render
@@ -120,34 +127,48 @@ const tick = () =>
 tick()
 
 function setup(){
-  // objects.push(new Body(new Vector(6,0,0), new Vector(0, 0, 0),[new Vector(0,0,0),new Vector(-1,0,0)], 100,10,scene));
-  // objects.push(new Body(new Vector(100,100,-100), new Vector(0, -1, 0),[new Vector(0,0,0)], 100,10,scene));
-  // objects.push(new Body(new Vector(500,0), new Vector(0, 0),[new Vector(0,0)], 10,9));
-  for (let i = 0; i < 100 ; i++) {
-      objects.push(new Body(new Vector(-400 + Math.random()*800, -400 + Math.random()*800, -400 + Math.random()*800), new Vector(0,0,0),[new Vector(0,0,0)], 1, 13, scene));
+  // objects.push(new Body(new Vector(-100,0,0), new Vector(0, -0.4, 0),[new Vector(0,0,0),new Vector(0,0,0)], 1.67e-27,10,scene));
+
+  // objects.push(new Body(new Vector(100,0,0), new Vector(0, 0.4, 0),[new Vector(0,0,0)], 1.67e-27,10,scene));
+  // objects.push(new Body(new Vector(-100,100,-100), new Vector(1.3, 1.3, 1.3),[new Vector(0,0,0)], 80,10,scene));
+
+  for (let i = 0; i < 200 ; i++) {
+      objects.push(new Body(new Vector(-400 + Math.random()*800, -400 + Math.random()*800, -400 + Math.random()*800), new Vector(0,0,0),[new Vector(0,0,0)], 1.67e-27, 13, scene));
   }
 
-  // inner circle
-  // let amount = 1000; 
+  // // inner circle
+  // let amount = 10; 
   // let angleInc = (Math.PI * 2) / amount;
   // let angle = 0;
-  // let radius = 4000;
+  // let radius = 400;
+  // let cons = 0.9
   // for (let i = 0; i < amount; i++) {
-  //     objects.push(new Body(new Vector(radius  * Math.cos(angle), radius  * Math.sin(angle), 0), new Vector(Math.cos(angle - Math.PI/2), Math.sin(angle - Math.PI/2), 0),[new Vector(0,0)], 50,10, scene));
+  //     objects.push(new Body(new Vector(radius  * Math.cos(angle), radius  * Math.sin(angle), 0), new Vector(-Math.cos(angle - Math.PI/2)*cons, -Math.sin(angle - Math.PI/2), 1),[new Vector(0,0,0.001)], 1.67e-27,10, scene));
+      
+  //     angle += angleInc;
+  // }
+  //   let amount = 10; 
+  // let angleInc = (Math.PI * 2) / amount;
+  // let angle = 0;
+  // let radius = 400;
+  // let cons = 0.9
+  // for (let i = 0; i < amount; i++) {
+  //     objects.push(new Body(new Vector(radius  * Math.cos(angle), radius  * Math.sin(angle), 0), new Vector(-Math.cos(angle - Math.PI/2)*cons, -Math.sin(angle - Math.PI/2)*cons,0),[new Vector(0,0,0)], 3.67e-27,10, scene));
       
   //     angle += angleInc;
   // }
 
-  //outer circle
-  // amount = 10; 
+  // //outer circle
+  // amount = 0; 
   // angleInc = (Math.PI * 2) / amount;
   // angle = 0;
-  // radius=400; 
+  // radius = 800;
   // for (let i = 0; i < amount; i++) {
-  //     objects.push(new Body([radius  * Math.cos(angle), radius  * Math.sin(angle)], new Vector(0.7 , angle +  Math.PI/2), [new Vector(0,0)] , 10,9));
+  //     objects.push(new Body(new Vector(radius  * Math.cos(angle), radius  * Math.sin(angle), 0), new Vector(Math.cos(angle - Math.PI/2), Math.sin(angle - Math.PI/2), 0),[new Vector(0,0)], 25,10, scene));
       
   //     angle += angleInc;
   // }
+
 
 
 }
@@ -163,7 +184,7 @@ function calcGravity(){
     for (let object2 of stack){
       if (!object.equals(object2)){
         let object2Pos = object2.getPos()
-        let distance = object.getDistanceTo(object2)
+        let distance = object.getDistanceTo(object2)*Math.pow(10,-13)
         let distanceSquared = Math.pow(distance, 2)
         //i have decided that for this project index 0 will be reserved for the gravitational force
         let mag = (G*object2.getMass())/distanceSquared

@@ -36,7 +36,7 @@ export default class Body {
 
       this.pos.add(this.velocity)
 
-      if (this.points.length > 100){
+      if (this.points.length > 10000){
         this.points.splice(0,1)
       }
       this.points.push(new THREE.Vector3( this.pos.getXComp(), this.pos.getYComp(), this.pos.getZComp() ))
