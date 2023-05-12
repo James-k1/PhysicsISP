@@ -1,33 +1,38 @@
 export default class Vector {
-    
+
     constructor(xComp, yComp, zComp) {
-      this.xComp = xComp
-      this.yComp = yComp
-      this.zComp = zComp
+        this.xComp = xComp
+        this.yComp = yComp
+        this.zComp = zComp
     }
-  
+
     add(v) {
-      this.xComp+=v.getXComp()
-      this.yComp+=v.getYComp()
-      this.zComp+=v.getZComp()
+        this.xComp += v.getXComp()
+        this.yComp += v.getYComp()
+        this.zComp += v.getZComp()
     }
-    getXComp(){
+    mult(s) {
+        this.xComp *= s
+        this.yComp *= s
+        this.zComp *= s
+    }
+    getXComp() {
         return this.xComp
     }
-    getYComp(){
+    getYComp() {
         return this.yComp
     }
-    getZComp(){
+    getZComp() {
         return this.zComp
     }
-    setXComp(x){
-        this.xComp=x
+    setXComp(x) {
+        this.xComp = x
     }
-    setYComp(y){
-        this.yComp=y
+    setYComp(y) {
+        this.yComp = y
     }
-    setZComp(z){
-        this.zComp=z
+    setZComp(z) {
+        this.zComp = z
     }
 
 }

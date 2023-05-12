@@ -6,6 +6,7 @@ import * as dat from 'dat.gui'
 import { PointLightHelper } from 'three';
 const Vector = require('./Vector').default;
 const Body = require('./Body').default;
+const Constants = require('./Constants').default;
 // Debug
 const gui = new dat.GUI()
 
@@ -58,6 +59,8 @@ window.addEventListener('resize', () =>
  * Camera
  */
 // Base camera
+
+
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100000)
 camera.position.x = 0
 camera.position.y = 0
@@ -82,8 +85,6 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  * Simulation
  */
 let objects = [];
-let G = 6.67e-11;
-let scaleConstant = 10e-9
 setup()
 
 /**
@@ -95,8 +96,9 @@ const clock = new THREE.Clock()
 const tick = () =>
 {
 
-    const elapsedTime = clock.getElapsedTime()
-
+    // const elapsedTime = clock.getElapsedTime()
+    const delta = clock.getDelta();
+    console.log(delta)
     // Update objects
     // console.time("calcGravity")
 
@@ -104,11 +106,12 @@ const tick = () =>
    
     // console.log(pos[0]==300 && pos[1]==0 && pos[2]==0)
     calcGravity()
+    calcElectroStaticForce()
     // console.timeEnd("calcGravity")
     // console.time("collisionDetection")
-    // collisionDetection()
+    collisionDetection()
     // console.timeEnd("collisionDetection")
-    updateObjects()
+    updateObjects(delta)
     // let pos = objects[0].getPos()
     // camera.position.x = pos[0]
     // camera.position.y = pos[1]
@@ -127,23 +130,34 @@ const tick = () =>
 tick()
 
 function setup(){
-  // objects.push(new Body(new Vector(-100,0,0), new Vector(0, -0.4, 0),[new Vector(0,0,0),new Vector(0,0,0)], 1.67e-27,10,scene));
-
-  // objects.push(new Body(new Vector(100,0,0), new Vector(0, 0.4, 0),[new Vector(0,0,0)], 1.67e-27,10,scene));
+  // let cons = 0
+  // objects.push(new Body(new Vector(-100,0,0), new Vector(0, -0.4*cons, 0),[new Vector(0,0,0),new Vector(0,0,0)], 1.67e-27,10,scene));
+  // objects.push(new Body(new Vector(100,0,0), new Vector(0, 0.4*cons, 0),[new Vector(0,0,0)], 1.67e-27,10,scene));
+  
   // objects.push(new Body(new Vector(-100,100,-100), new Vector(1.3, 1.3, 1.3),[new Vector(0,0,0)], 80,10,scene));
 
-  for (let i = 0; i < 200 ; i++) {
-      objects.push(new Body(new Vector(-400 + Math.random()*800, -400 + Math.random()*800, -400 + Math.random()*800), new Vector(0,0,0),[new Vector(0,0,0)], 1.67e-27, 13, scene));
+  for (let i = 0; i < 300 ; i++) {
+
+    let x = -400 + Math.random()*800
+    let y = -400 + Math.random()*800
+    let z = -400 + Math.random()*800
+
+    let mag = Math.sqrt(x*x + y*y + z*z)
+    let normal = new Vector(-x/mag, -y/mag, -z/mag)
+    normal.mult(8)
+  
+
+    objects.push(new Body(new Vector(x,y,z), normal,[new Vector(0,0,0), new Vector(0,0,0)], 1.67e-27, 13, scene));
   }
 
-  // // inner circle
-  // let amount = 10; 
+  // inner circle
+  //  let amount = 10; 
   // let angleInc = (Math.PI * 2) / amount;
   // let angle = 0;
   // let radius = 400;
-  // let cons = 0.9
+  // let cons = 0.0
   // for (let i = 0; i < amount; i++) {
-  //     objects.push(new Body(new Vector(radius  * Math.cos(angle), radius  * Math.sin(angle), 0), new Vector(-Math.cos(angle - Math.PI/2)*cons, -Math.sin(angle - Math.PI/2), 1),[new Vector(0,0,0.001)], 1.67e-27,10, scene));
+  //     objects.push(new Body(new Vector(radius  * Math.cos(angle), radius  * Math.sin(angle), 0), new Vector(-Math.cos(angle - Math.PI/2)*cons, -Math.sin(angle - Math.PI/2)*cons, 0),[new Vector(0,0,0)], 1.67e-27,10, scene));
       
   //     angle += angleInc;
   // }
@@ -184,25 +198,59 @@ function calcGravity(){
     for (let object2 of stack){
       if (!object.equals(object2)){
         let object2Pos = object2.getPos()
-        let distance = object.getDistanceTo(object2)*Math.pow(10,-13)
-        let distanceSquared = Math.pow(distance, 2)
-        //i have decided that for this project index 0 will be reserved for the gravitational force
-        let mag = (G*object2.getMass())/distanceSquared
-        let xComp = object2Pos[0]-objectPos[0]
-        let yComp = object2Pos[1]-objectPos[1]
-        let zComp = object2Pos[2]-objectPos[2]
-        let scale = mag/distance
-        object.addAccelerationAtIndex(0, new Vector(xComp*scale,yComp*scale,zComp*scale))
+        let distance = object.getDistanceTo(object2)*Constants.distanceScale
+        if (distance>(0.5*object.getRadius()+0.5*object2.getRadius())*Constants.distanceScale){
+          let distanceSquared = Math.pow(distance, 2)
+          //i have decided that for this project index 0 will be reserved for the gravitational force
+          let mag = (Constants.G*object2.getMass())/distanceSquared
+          let xComp = object2Pos[0]-objectPos[0]
+          let yComp = object2Pos[1]-objectPos[1]
+          let zComp = object2Pos[2]-objectPos[2]
+          let scale = mag/distance
+          object.addAccelerationAtIndex(0, new Vector(xComp*scale,yComp*scale,zComp*scale))
 
-        mag = (G*object.getMass())/distanceSquared
-        scale = mag/distance
-        object2.addAccelerationAtIndex(0, new Vector(-xComp*scale,-yComp*scale,-zComp*scale))
+          mag = (Constants.G*object.getMass())/distanceSquared
+          scale = mag/distance
+          object2.addAccelerationAtIndex(0, new Vector(-xComp*scale,-yComp*scale,-zComp*scale))
+        }
+      }
+    }
+    stack.splice(0,1)
+  }
+}
+
+function calcElectroStaticForce(){
+  let stack = [...objects]
+  for (let object of stack){
+    object.clearAccelerationAtIndex(1)
+  }
+  while(stack.length>1){
+    let object = stack[0]
+    let objectPos = object.getPos()
+    for (let object2 of stack){
+      if (!object.equals(object2)){
+        let object2Pos = object2.getPos()
+        let distance = object.getDistanceTo(object2)*Constants.distanceScale
+
+          let distanceSquared = Math.pow(distance, 2)
+          //i have decided that for this project index 0 will be reserved for the gravitational force
+          let mag = (Constants.KTimesProtonChargeSquared)/distanceSquared
+          let xComp = object2Pos[0]-objectPos[0]
+          let yComp = object2Pos[1]-objectPos[1]
+          let zComp = object2Pos[2]-objectPos[2]
+          let scale = mag/distance
+          object.addAccelerationAtIndex(1, new Vector(-xComp*scale,-yComp*scale,-zComp*scale))
+
+          mag = (Constants.KTimesProtonChargeSquared)/distanceSquared
+          scale = mag/distance
+          object2.addAccelerationAtIndex(1, new Vector(xComp*scale,yComp*scale,zComp*scale))
         
       }
     }
     stack.splice(0,1)
   }
 }
+
 
 function collisionDetection(){
   let stack = [...objects]
@@ -260,9 +308,9 @@ function collisionDetection(){
 
 }
 
-function updateObjects(){
+function updateObjects(deltaTime){
   for(let object of objects){
-    object.update()
+    object.update(deltaTime)
     object.draw()
     
   }
