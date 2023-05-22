@@ -7,6 +7,7 @@ import { PointLightHelper } from 'three';
 const Vector = require('./Vector').default;
 const Body = require('./Body').default;
 const Constants = require('./Constants').default;
+const Octree = require('./Octree').default
 // Debug
 const gui = new dat.GUI()
 
@@ -96,33 +97,54 @@ const clock = new THREE.Clock()
 const tick = () =>
 {
 
-    // const elapsedTime = clock.getElapsedTime()
-    const delta = clock.getDelta();
-    console.log(delta)
-    // Update objects
-    // console.time("calcGravity")
+    // const delta = clock.getDelta();
+    // console.log(delta)
+
+    updateObjects()
+
+    let tree = new Octree(objects, false, scene)
+
+    //draw box
+    const boxMaterial = new THREE.MeshBasicMaterial({ wireframe: true, color: 0xff0000});
+    const geometry = new THREE.BoxGeometry(tree.sideLength, tree.sideLength, tree.sideLength);
+    const wireframeBox = new THREE.Mesh(geometry, boxMaterial);
+    wireframeBox.name = "destroy";
+    // scene.add(wireframeBox)
+
+    for (let object of objects){
+      object.setAccelerationAtIndex(0, tree.computeForces(object, tree.getQuads()))
+      
+    }
+    
+    // const boundingBox = new THREE.Box3(tree.min, tree.max);
+    // const boxHelper = new THREE.Box3Helper(boundingBox, 0xff0000);
+
+
 
     
-   
-    // console.log(pos[0]==300 && pos[1]==0 && pos[2]==0)
-    calcGravity()
-    calcElectroStaticForce()
-    // console.timeEnd("calcGravity")
-    // console.time("collisionDetection")
-    collisionDetection()
-    // console.timeEnd("collisionDetection")
-    updateObjects(delta)
-    // let pos = objects[0].getPos()
-    // camera.position.x = pos[0]
-    // camera.position.y = pos[1]
-    // controls.target.set(pos[0],pos[1],pos[2])
-    // console.log(pos)
+    // scene.add(boxHelper);
+
+
+
     // Update Orbital Controls
-    console.log(objects[0])
     controls.update()
 
     // Render
     renderer.render(scene, camera)
+
+    //Remove garbage
+
+    const objectsToRemove = [];
+    scene.traverse((object) => {
+      if (object.name === "destroy") {
+        objectsToRemove.push(object);
+      }
+    });
+    for (const object of objectsToRemove) {
+      scene.remove(object);
+    }
+
+    console.log("frame")
 
     // Call tick again on the next frame
     window.requestAnimationFrame(tick)
@@ -136,7 +158,7 @@ function setup(){
   
   // objects.push(new Body(new Vector(-100,100,-100), new Vector(1.3, 1.3, 1.3),[new Vector(0,0,0)], 80,10,scene));
 
-  for (let i = 0; i < 300 ; i++) {
+  for (let i = 0; i < 1000 ; i++) {
 
     let x = -400 + Math.random()*800
     let y = -400 + Math.random()*800
@@ -144,10 +166,11 @@ function setup(){
 
     let mag = Math.sqrt(x*x + y*y + z*z)
     let normal = new Vector(-x/mag, -y/mag, -z/mag)
-    normal.mult(8)
+    normal.mult(15)
   
 
     objects.push(new Body(new Vector(x,y,z), normal,[new Vector(0,0,0), new Vector(0,0,0)], 1.67e-27, 13, scene));
+
   }
 
   // inner circle
@@ -308,9 +331,9 @@ function collisionDetection(){
 
 }
 
-function updateObjects(deltaTime){
+function updateObjects(){
   for(let object of objects){
-    object.update(deltaTime)
+    object.update()
     object.draw()
     
   }
