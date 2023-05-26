@@ -17,17 +17,20 @@ export default class Body {
     this.density = mass / (Math.PI * Math.pow(radius, 2));
     this.sphere = new THREE.Mesh(
       new THREE.SphereGeometry(this.radius, 32, 32), 
-      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1, metalness: 0.9 })
+      new THREE.MeshStandardMaterial({roughness: 0, metalness: 0.9})
     );
+
+
+
     this.id = this.sphere.id;
     this.sphere.position.set(this.pos.getXComp(), this.pos.getYComp(), this.pos.getZComp());
     this.points.push(new THREE.Vector3(this.pos.getXComp(), this.pos.getYComp(), this.pos.getZComp()));
     this.geometry = new THREE.BufferGeometry().setFromPoints(this.points);
     this.material = new THREE.LineBasicMaterial({ color: 0xff00ff });
     this.line = new THREE.Line(this.geometry, this.material);
-
-    scene.add(this.sphere);
-    scene.add(this.line);
+    this.scene = scene
+    this.scene.add(this.sphere);
+    // scene.add(this.line);
     // this.path = new THREE.Line(new THREE.BufferGeometry().setFromPoints(new THREE.CatmullRomCurve3([new THREE.Vector3(this.pos.getXComp(), this.pos.getYComp(), this.pos.getZComp()),]).getPoints()), new THREE.LineBasicMaterial({ color: 0xff0000 }));
     // scene.add(this.path)
   }
@@ -44,28 +47,31 @@ export default class Body {
     this.pos.add(this.velocity);
     
 
-    if (this.points.length > 100) {
-      this.points.splice(0, 1);
-    }
-    this.points.push(new THREE.Vector3(this.pos.getXComp(), this.pos.getYComp(), this.pos.getZComp()));
+    // if (this.points.length > 100) {
+    //   this.points.splice(0, 1);
+    // }
+    // this.points.push(new THREE.Vector3(this.pos.getXComp(), this.pos.getYComp(), this.pos.getZComp()));
 
-    // this might stop memory leaks
-    this.line.geometry.dispose();
-    this.line.geometry = new THREE.BufferGeometry().setFromPoints(this.points);
+    // // this might stop memory leaks
+    // this.line.geometry.dispose();
+    // this.line.geometry = new THREE.BufferGeometry().setFromPoints(this.points);
   } 
   
   calculateGravityAndElectroStatic(point, mass){
 
     let distanceSquared = (point[0] - this.pos.getXComp())**2 + (point[1] - this.pos.getYComp())**2 + (point[2] - this.pos.getZComp())**2 
     let distance = Math.sqrt(distanceSquared)*Constants.distanceScale
-    let gravityMag = (Constants.G*mass)/distance**2
-    let electroStaticMag = (Constants.KTimesProtonChargeSquared)/distance**2
-    let xComp = point[0] - this.pos.getXComp()
-    let yComp = point[1] - this.pos.getYComp()
-    let zComp = point[2] - this.pos.getZComp()
-    let gravityScale = gravityMag/distance
-    let electroStaticScale = electroStaticMag/distance
-    return new Vector(xComp*gravityScale - xComp*electroStaticScale, yComp*gravityScale - yComp*electroStaticScale, zComp*gravityScale - zComp*electroStaticScale)
+    if (distance > (this.radius*2)*Constants.distanceScale){
+      let gravityMag = (Constants.G*mass)/distance**2
+      let electroStaticMag = (Constants.KTimesProtonChargeSquared)/distance**2
+      let xComp = point[0] - this.pos.getXComp()
+      let yComp = point[1] - this.pos.getYComp()
+      let zComp = point[2] - this.pos.getZComp()
+      let gravityScale = gravityMag/distance
+      let electroStaticScale = (electroStaticMag/distance)*0
+      return new Vector(xComp*gravityScale - xComp*electroStaticScale, yComp*gravityScale - yComp*electroStaticScale, zComp*gravityScale - zComp*electroStaticScale)
+    }
+    return(new Vector(0,0,0))
 
         
   }
@@ -159,5 +165,6 @@ export default class Body {
   getId() {
     return this.id
   }
+  
 
 }

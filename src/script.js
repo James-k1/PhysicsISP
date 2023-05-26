@@ -8,8 +8,24 @@ const Vector = require('./Vector').default;
 const Body = require('./Body').default;
 const Constants = require('./Constants').default;
 const Octree = require('./Octree').default
-// Debug
+let inputs = {
+  numberOfObjects: 20,
+  maxDist: 800,
+  protonIntensity: 0,
+  electronIntensity: 0,
+};
+let oldInputs = {
+  numberOfObjects: 20,
+  protonIntensity: 0,
+  electronIntensity: 0,
+}
+
+
 const gui = new dat.GUI()
+gui.add(inputs, "numberOfObjects", 0, 2000).name("Objects")
+gui.add(inputs, "maxDist").name("Distance")
+gui.add(inputs, "protonIntensity").name("Proton Intensity")
+gui.add(inputs, "electronIntensity").name("Electron Intensity")
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
@@ -22,14 +38,14 @@ const pointLight = new THREE.PointLight(0x0000ff, 10)
 pointLight.position.x = 0
 pointLight.position.y = 0
 pointLight.position.z = 0
-const ambientLight = new THREE.AmbientLight(0xffffff, 2)
-scene.add(pointLight)
+const ambientLight = new THREE.AmbientLight(0xffcc6f , 10)
+// scene.add(pointLight)
 scene.add(ambientLight)
 
 /**
  * helper
  */
-scene.add(new PointLightHelper(pointLight))
+// scene.add(new PointLightHelper(pointLight))
 
 /**
  * Sizes
@@ -95,36 +111,42 @@ setup()
 const clock = new THREE.Clock()
 
 const tick = () =>
-{
+{ 
+  let objectDelta = inputs.numberOfObjects - oldInputs.numberOfObjects
+  if (objectDelta > 0){
+    addObjects(objectDelta)
 
-    // const delta = clock.getDelta();
-    // console.log(delta)
+  }else if (objectDelta < 0){
+    rmObjects(objects.slice(objectDelta))
+    objects = objects.slice(0, objectDelta)
+    
+  }
+  oldInputs.numberOfObjects = inputs.numberOfObjects
 
-    updateObjects()
 
-    let tree = new Octree(objects, false, scene)
+  collisionDetection()  
+  updateObjects()
+    
+    //create Tree
+    if (objects.length > 1){
+      let tree = new Octree(objects, false, scene)
 
-    //draw box
-    const boxMaterial = new THREE.MeshBasicMaterial({ wireframe: true, color: 0xff0000});
-    const geometry = new THREE.BoxGeometry(tree.sideLength, tree.sideLength, tree.sideLength);
-    const wireframeBox = new THREE.Mesh(geometry, boxMaterial);
-    wireframeBox.name = "destroy";
-    // scene.add(wireframeBox)
+      //draw box
+      const boxMaterial = new THREE.MeshBasicMaterial({ wireframe: true, color: 0xff0000});
+      const geometry = new THREE.BoxGeometry(tree.sideLength, tree.sideLength, tree.sideLength);
+      const wireframeBox = new THREE.Mesh(geometry, boxMaterial);
+      wireframeBox.name = "destroy";
+      // scene.add(wireframeBox)
 
-    for (let object of objects){
-      object.setAccelerationAtIndex(0, tree.computeForces(object, tree.getQuads()))
-      
+      for (let object of objects){
+        object.setAccelerationAtIndex(0, tree.computeForces(object, tree.getQuads()))
+        
+      }
     }
     
-    // const boundingBox = new THREE.Box3(tree.min, tree.max);
-    // const boxHelper = new THREE.Box3Helper(boundingBox, 0xff0000);
-
-
+  
 
     
-    // scene.add(boxHelper);
-
-
 
     // Update Orbital Controls
     controls.update()
@@ -134,14 +156,10 @@ const tick = () =>
 
     //Remove garbage
 
-    const objectsToRemove = [];
-    scene.traverse((object) => {
-      if (object.name === "destroy") {
-        objectsToRemove.push(object);
-      }
-    });
-    for (const object of objectsToRemove) {
-      scene.remove(object);
+    let rmObj = scene.getObjectByName("destroy")
+    while(rmObj != null){
+      scene.remove(rmObj);
+      rmObj = scene.getObjectByName("destroy")
     }
 
     console.log("frame")
@@ -151,126 +169,34 @@ const tick = () =>
 }
 tick()
 
+function rmObjects(arr){
+  for (let body of arr){
+    let index = scene.children.findIndex(obj => obj.id==body.getId());
+    scene.children.splice(index, 1);
+  }
+}
+
 function setup(){
-  // let cons = 0
-  // objects.push(new Body(new Vector(-100,0,0), new Vector(0, -0.4*cons, 0),[new Vector(0,0,0),new Vector(0,0,0)], 1.67e-27,10,scene));
-  // objects.push(new Body(new Vector(100,0,0), new Vector(0, 0.4*cons, 0),[new Vector(0,0,0)], 1.67e-27,10,scene));
+  addObjects(inputs.numberOfObjects)
+}
+
+function addObjects(num){
+
+    for (let i = 0; i <  num; i++) {
+
+    let x = -inputs.maxDist + Math.random()*inputs.maxDist*2
+    let y = -inputs.maxDist + Math.random()*inputs.maxDist*2
+    let z = -inputs.maxDist + Math.random()*inputs.maxDist*2
   
-  // objects.push(new Body(new Vector(-100,100,-100), new Vector(1.3, 1.3, 1.3),[new Vector(0,0,0)], 80,10,scene));
 
-  for (let i = 0; i < 1000 ; i++) {
-
-    let x = -400 + Math.random()*800
-    let y = -400 + Math.random()*800
-    let z = -400 + Math.random()*800
-
-    let mag = Math.sqrt(x*x + y*y + z*z)
-    let normal = new Vector(-x/mag, -y/mag, -z/mag)
-    normal.mult(15)
+    // let mag = Math.sqrt(x*x + y*y + z*z)
+    // let normal = new Vector(--x/mag, --y/mag, --z/mag)
+    let normal = new Vector(-50 + Math.random()*100, -50 + Math.random()*100, -50 + Math.random()*100)
+    normal.mult(0.25)
   
 
     objects.push(new Body(new Vector(x,y,z), normal,[new Vector(0,0,0), new Vector(0,0,0)], 1.67e-27, 13, scene));
 
-  }
-
-  // inner circle
-  //  let amount = 10; 
-  // let angleInc = (Math.PI * 2) / amount;
-  // let angle = 0;
-  // let radius = 400;
-  // let cons = 0.0
-  // for (let i = 0; i < amount; i++) {
-  //     objects.push(new Body(new Vector(radius  * Math.cos(angle), radius  * Math.sin(angle), 0), new Vector(-Math.cos(angle - Math.PI/2)*cons, -Math.sin(angle - Math.PI/2)*cons, 0),[new Vector(0,0,0)], 1.67e-27,10, scene));
-      
-  //     angle += angleInc;
-  // }
-  //   let amount = 10; 
-  // let angleInc = (Math.PI * 2) / amount;
-  // let angle = 0;
-  // let radius = 400;
-  // let cons = 0.9
-  // for (let i = 0; i < amount; i++) {
-  //     objects.push(new Body(new Vector(radius  * Math.cos(angle), radius  * Math.sin(angle), 0), new Vector(-Math.cos(angle - Math.PI/2)*cons, -Math.sin(angle - Math.PI/2)*cons,0),[new Vector(0,0,0)], 3.67e-27,10, scene));
-      
-  //     angle += angleInc;
-  // }
-
-  // //outer circle
-  // amount = 0; 
-  // angleInc = (Math.PI * 2) / amount;
-  // angle = 0;
-  // radius = 800;
-  // for (let i = 0; i < amount; i++) {
-  //     objects.push(new Body(new Vector(radius  * Math.cos(angle), radius  * Math.sin(angle), 0), new Vector(Math.cos(angle - Math.PI/2), Math.sin(angle - Math.PI/2), 0),[new Vector(0,0)], 25,10, scene));
-      
-  //     angle += angleInc;
-  // }
-
-
-
-}
-
-function calcGravity(){
-  let stack = [...objects]
-  for (let object of stack){
-    object.clearAccelerationAtIndex(0)
-  }
-  while(stack.length>1){
-    let object = stack[0]
-    let objectPos = object.getPos()
-    for (let object2 of stack){
-      if (!object.equals(object2)){
-        let object2Pos = object2.getPos()
-        let distance = object.getDistanceTo(object2)*Constants.distanceScale
-        if (distance>(0.5*object.getRadius()+0.5*object2.getRadius())*Constants.distanceScale){
-          let distanceSquared = Math.pow(distance, 2)
-          //i have decided that for this project index 0 will be reserved for the gravitational force
-          let mag = (Constants.G*object2.getMass())/distanceSquared
-          let xComp = object2Pos[0]-objectPos[0]
-          let yComp = object2Pos[1]-objectPos[1]
-          let zComp = object2Pos[2]-objectPos[2]
-          let scale = mag/distance
-          object.addAccelerationAtIndex(0, new Vector(xComp*scale,yComp*scale,zComp*scale))
-
-          mag = (Constants.G*object.getMass())/distanceSquared
-          scale = mag/distance
-          object2.addAccelerationAtIndex(0, new Vector(-xComp*scale,-yComp*scale,-zComp*scale))
-        }
-      }
-    }
-    stack.splice(0,1)
-  }
-}
-
-function calcElectroStaticForce(){
-  let stack = [...objects]
-  for (let object of stack){
-    object.clearAccelerationAtIndex(1)
-  }
-  while(stack.length>1){
-    let object = stack[0]
-    let objectPos = object.getPos()
-    for (let object2 of stack){
-      if (!object.equals(object2)){
-        let object2Pos = object2.getPos()
-        let distance = object.getDistanceTo(object2)*Constants.distanceScale
-
-          let distanceSquared = Math.pow(distance, 2)
-          //i have decided that for this project index 0 will be reserved for the gravitational force
-          let mag = (Constants.KTimesProtonChargeSquared)/distanceSquared
-          let xComp = object2Pos[0]-objectPos[0]
-          let yComp = object2Pos[1]-objectPos[1]
-          let zComp = object2Pos[2]-objectPos[2]
-          let scale = mag/distance
-          object.addAccelerationAtIndex(1, new Vector(-xComp*scale,-yComp*scale,-zComp*scale))
-
-          mag = (Constants.KTimesProtonChargeSquared)/distanceSquared
-          scale = mag/distance
-          object2.addAccelerationAtIndex(1, new Vector(xComp*scale,yComp*scale,zComp*scale))
-        
-      }
-    }
-    stack.splice(0,1)
   }
 }
 
@@ -310,10 +236,10 @@ function collisionDetection(){
         scene.children.splice(index, 1);
         index = scene.children.findIndex(obj => obj.id==renderTwo);
         scene.children.splice(index, 1);
-        index = scene.children.findIndex(obj => obj.id==object.line.id);
-        scene.children.splice(index, 1);
-        index = scene.children.findIndex(obj => obj.id==object2.line.id);
-        scene.children.splice(index, 1);
+        // index = scene.children.findIndex(obj => obj.id==object.line.id);
+        // scene.children.splice(index, 1);
+        // index = scene.children.findIndex(obj => obj.id==object2.line.id);
+        // scene.children.splice(index, 1);
 
         index = objects.findIndex(obj => obj.equals(object));
         objects.splice(index, 1);
