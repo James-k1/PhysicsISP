@@ -41,6 +41,23 @@ export default class Octree {
         }
         return netForce;
     }
+    collisionDet(objects, quads){
+        let netForce = new Vector(0, 0, 0);
+        for (let quad of quads){
+            if (quad.getObjCount() != 0) {
+                if ((quad.getObjCount() == 1 && !quad.getObjects()[0].equals(object)) || quad.getSideLength()/this.distance(object.getPos(), quad.getCenterOfMass()) < theta) {
+
+                    netForce.add(object.calculateGravityAndElectroStatic(quad.getCenterOfMass(), quad.getTotalMass()))
+                    // netForce.add(object.calculateElectrostatic(quad.getCenterOfMass(), quad.getTotalMass()))
+
+
+                } else if (quad.getObjCount() > 1){
+                    netForce.add(this.computeForces(object, quad.getQuads()))
+                }
+            }
+        }
+        return netForce;
+    }
 
 
     getQuads(){

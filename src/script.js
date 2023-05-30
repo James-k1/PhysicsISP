@@ -21,8 +21,10 @@ let oldInputs = {
 }
 
 
-const gui = new dat.GUI()
-gui.add(inputs, "numberOfObjects", 0, 2000).name("Objects")
+let gui = new dat.GUI()
+
+gui.add(inputs, "numberOfObjects").name("Objects").min(0)
+
 gui.add(inputs, "maxDist").name("Distance")
 gui.add(inputs, "protonIntensity").name("Proton Intensity")
 gui.add(inputs, "electronIntensity").name("Electron Intensity")
@@ -34,12 +36,12 @@ const canvas = document.querySelector('canvas.webgl')
 const scene = new THREE.Scene()
 
 // Lights
-const pointLight = new THREE.PointLight(0x0000ff, 10)
+const pointLight = new THREE.PointLight(0xffffff, 20)
 pointLight.position.x = 0
 pointLight.position.y = 0
 pointLight.position.z = 0
 const ambientLight = new THREE.AmbientLight(0xffcc6f , 10)
-// scene.add(pointLight)
+scene.add(pointLight)
 scene.add(ambientLight)
 
 /**
@@ -123,8 +125,12 @@ const tick = () =>
   }
   oldInputs.numberOfObjects = inputs.numberOfObjects
 
+  
+  // collisionDetection()  
 
-  collisionDetection()  
+
+
+
   updateObjects()
     
     //create Tree
@@ -139,9 +145,10 @@ const tick = () =>
       // scene.add(wireframeBox)
 
       for (let object of objects){
-        object.setAccelerationAtIndex(0, tree.computeForces(object, tree.getQuads()))
-        
+        object.setAccelerationAtIndex(0, tree.computeForces(object, tree.getQuads())) 
       }
+      objects = tree.collisionDet(objects, tree.getQuads())
+      
     }
     
   
