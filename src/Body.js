@@ -13,7 +13,7 @@ export default class Body {
     this.mass = mass;
     this.radius = radius;
     this.points = [];
-
+    this.quad = null
     this.density = mass / (Math.PI * Math.pow(radius, 2));
     this.sphere = new THREE.Mesh(
       new THREE.SphereGeometry(this.radius, 32, 32), 
@@ -164,6 +164,12 @@ export default class Body {
   }
   getId() {
     return this.id
+  }
+  setQuad(quad){
+    this.quad = quad
+  }
+  getQuad(){
+    return this.quad
   }
 
 

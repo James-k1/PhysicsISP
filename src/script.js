@@ -10,7 +10,7 @@ const Constants = require('./Constants').default;
 const Octree = require('./Octree').default
 let inputs = {
   addObject : false,
-  numberOfObjects: 2,
+  numberOfObjects: 4,
   radius: 100,
   distance: 0,
   protonIntensity: 0,
@@ -18,6 +18,18 @@ let inputs = {
 
 };
 
+
+window.rmObject = function (object){
+  
+  let index = objects.findIndex(obj => obj.equals(object));
+  objects.splice(index, 1);
+
+
+}
+
+window.addObject = function (object){
+  objects.push(object)
+}
 
 
 let gui = new dat.GUI()
@@ -143,11 +155,6 @@ const clock = new THREE.Clock()
 const tick = () =>
 { 
 
-  
-  collisionDetection()  
-
-
-
 
   updateObjects()
     
@@ -162,8 +169,26 @@ const tick = () =>
       wireframeBox.name = "destroy";
       // scene.add(wireframeBox)
 
+
+
+      
       for (let object of objects){
-        object.setAccelerationAtIndex(0, tree.computeForces(object, tree.getQuads())) 
+        let force = tree.computeForces(object, tree.getQuads())
+        if (force){
+          object.setAccelerationAtIndex(0, force) 
+        }
+      }
+
+      for (let i = 0; i < objects.length; i++){
+        // let object = objects[i]
+        // let collision = false;
+        // if (object.getQuad()){
+        //   collision = tree.collisionDet(object, object.getQuad())
+        // }
+        // if (collision && objects.length > 1){
+        //   tree = new Octree(objects, false, scene, window)
+        // }
+        
       }
       // objects = tree.collisionDet(objects, tree.getQuads())
       
@@ -277,17 +302,7 @@ function collisionDetection(){
 
 }
 
-window.rmObject = function (object){
-  
-  let index = objects.findIndex(obj => obj.equals(object));
-  objects.splice(index, 1);
 
-
-}
-
-window.addObject = function (object){
-  objects.push(object)
-}
 
 function updateObjects(){
   for(let object of objects){

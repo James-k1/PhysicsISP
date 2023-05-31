@@ -12,7 +12,9 @@ export default class Child {
         this.scene = scene
         this.totalMass = 0; 
         this.parent = parent
-
+        if (this.objCount == 1){
+            this.objects[0].setQuad(this)
+        }
         //calculate center of mass bottom up NOT top down
         this.centerOfMass = [0, 0, 0];
 
@@ -25,6 +27,7 @@ export default class Child {
         let quadSixObj = []
         let quadSevenObj = []
         let quadEightObj = []
+
         if (this.objCount > 1){
             let lenDivTwo = this.sideLength/2
             let mx = this.midPoint.getXComp()

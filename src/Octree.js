@@ -24,26 +24,18 @@ export default class Octree {
         //construct tree
         this.tree = new Child(new Vector(0, 0, 0), this.sideLength, objects, drawOutline, this, scene)
 
-        this.collision = false;
+
 
     }
     computeForces(object, quads){
         let netForce = new Vector(0, 0, 0);
         for (let quad of quads){
             if (quad.getObjCount() != 0) {
-                if (quad.getObjCount() == 1) {
-                    this.collision = false
-                    this.collisionDet(quad.getObjects()[0],quad);
-                    if (this.collision){
-                        quad.clear()
-                        this.collision = false
-                    }
-                    
-                    //changed to and (i dont know how logic works)
-                    if (!this.collision && !quad.getObjects()[0].equals(object) && quad.getSideLength()/this.distance(object.getPos(), quad.getCenterOfMass()) < theta) {
-                        netForce.add(object.calculateGravityAndElectroStatic(quad.getCenterOfMass(), quad.getTotalMass()))
-                        // netForce.add(object.calculateElectrostatic(quad.getCenterOfMass(), quad.getTotalMass()))
-                    }
+                if ((quad.getObjCount() == 1 && !quad.getObjects()[0].equals(object)) || quad.getSideLength()/this.distance(object.getPos(), quad.getCenterOfMass()) < theta) {
+
+                    netForce.add(object.calculateGravityAndElectroStatic(quad.getCenterOfMass(), quad.getTotalMass()))
+                    // netForce.add(object.calculateElectrostatic(quad.getCenterOfMass(), quad.getTotalMass()))
+
 
                 } else if (quad.getObjCount() > 1){
                     netForce.add(this.computeForces(object, quad.getQuads()))
@@ -52,23 +44,56 @@ export default class Octree {
         }
         return netForce;
     }
+    // computeForces(object, quads){
+    //     let netForce = new Vector(0, 0, 0);
+    //     for (let quad of quads){
+    //         if (quad.getObjCount() != 0) {
+    //             if (quad.getObjCount() == 1) {
+    //                 this.collision = false
+    //                 // this.collisionDet(quad.getObjects()[0],quad);
+    //                 if (this.collision){
+    //                     quad.clear()
+    //                     return false;
+    //                 }
+                    
+    //                 //changed to and (i dont know how logic works)
+    //                 if (!this.collision && !quad.getObjects()[0].equals(object) && quad.getSideLength()/this.distance(object.getPos(), quad.getCenterOfMass()) < theta) {
+    //                     netForce.add(object.calculateGravityAndElectroStatic(quad.getCenterOfMass(), quad.getTotalMass()))
+    //                     // netForce.add(object.calculateElectrostatic(quad.getCenterOfMass(), quad.getTotalMass()))
+    //                 }
+
+    //             } else if (quad.getObjCount() > 1){
+    //                 let force = this.computeForces(object, quad.getQuads())
+    //                 if (force)
+    //                     netForce.add(force)
+    //                 else {
+    //                     return false
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return netForce;
+    // }
     collisionDet(object, quad){
         //check if sidelength is bigger than radius
         // if it is go out a level
         // if not pass the current quad level into another fucntion that checks for collision
         if (object.getRadius()*2 > quad.getSideLength()){
-            this.collisionDet(object, quad.getParent())
+            let col = this.collisionDet(object, quad.getParent())
+            console.log(col)
+            return col
         }else{
-            this.collisionDetReq(object, quad.getParent())
+            let col = this.collisionDetReq(object, quad.getParent())
+            console.log(col)
+            return col
         }
     }
     collisionDetReq(object, quad){
-        for (let neibour of quad.getQuads()){
-            if (neibour.getObjCount() > 1){
-                this.collisionDetReq(object, quad)
-            }else if (neibour.getObjCount() == 1 && !neibour.getObjects()[0].equals(object) && neibour.getObjects()[0].getDistanceTo(object) < object.getRadius() + neibour.getObjects()[0].getRadius()){
-                this.collision = true;
-                let object2 = neibour.getObjects()[0];
+        for (let neighbour of quad.getQuads()){
+            if (neighbour.getObjCount() > 1){
+                return this.collisionDetReq(object, neighbour)
+            }else if (neighbour.getObjCount() == 1 && !neighbour.getObjects()[0].equals(object) && neighbour.getObjects()[0].getDistanceTo(object) < object.getRadius() + neighbour.getObjects()[0].getRadius()){
+                let object2 = neighbour.getObjects()[0];
                 let pos = object.getPos()
                 let massOne = object.getMass()
                 let massTwo = object2.getMass()
@@ -95,12 +120,13 @@ export default class Octree {
                 this.script.rmObject(object)
                 
                 this.script.rmObject(object2)
-                neibour.clear()
+                neighbour.clear()
 
                 this.script.addObject(new Body(new Vector(pos[0],pos[1],pos[2]), new Vector(vx, vy, vz), [new Vector(0,0,0)], massSum, newRadius, this.scene))
-
+                return true
             }
         }
+        return false
     }
 
 
