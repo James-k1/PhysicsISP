@@ -4,13 +4,14 @@ const Vector = require('./Vector').default;
 
 export default class Child {
     
-    constructor(midPoint, sideLength, objects, drawOutline, scene) {
+    constructor(midPoint, sideLength, objects, drawOutline, parent, scene) {
         this.midPoint = midPoint;
         this.sideLength=sideLength;
         this.objects=objects;
         this.objCount = objects.length
         this.scene = scene
         this.totalMass = 0; 
+        this.parent = parent
 
         //calculate center of mass bottom up NOT top down
         this.centerOfMass = [0, 0, 0];
@@ -90,14 +91,14 @@ export default class Child {
             let lenDivFour = lenDivTwo/2;
 
             //there is definitly a better way to do this but im lazy
-            this.quads = [new Child(new Vector(mx - lenDivFour, my + lenDivFour, mz + lenDivFour), lenDivTwo, quadOneObj, drawOutline, scene),
-            new Child(new Vector(mx + lenDivFour, my + lenDivFour, mz + lenDivFour), lenDivTwo, quadTwoObj, drawOutline, scene),
-            new Child(new Vector(mx - lenDivFour, my - lenDivFour, mz + lenDivFour), lenDivTwo, quadThreeObj, drawOutline, scene),
-            new Child(new Vector(mx + lenDivFour, my - lenDivFour, mz + lenDivFour), lenDivTwo, quadFourObj, drawOutline, scene),
-            new Child(new Vector(mx - lenDivFour, my + lenDivFour, mz - lenDivFour), lenDivTwo, quadFiveObj, drawOutline, scene),
-            new Child(new Vector(mx + lenDivFour, my + lenDivFour, mz - lenDivFour), lenDivTwo, quadSixObj, drawOutline, scene),
-            new Child(new Vector(mx - lenDivFour, my - lenDivFour, mz - lenDivFour), lenDivTwo, quadSevenObj, drawOutline, scene),
-            new Child(new Vector(mx + lenDivFour, my - lenDivFour, mz - lenDivFour), lenDivTwo, quadEightObj, drawOutline, scene)
+            this.quads = [new Child(new Vector(mx - lenDivFour, my + lenDivFour, mz + lenDivFour), lenDivTwo, quadOneObj, drawOutline, this, scene),
+            new Child(new Vector(mx + lenDivFour, my + lenDivFour, mz + lenDivFour), lenDivTwo, quadTwoObj, drawOutline, this, scene),
+            new Child(new Vector(mx - lenDivFour, my - lenDivFour, mz + lenDivFour), lenDivTwo, quadThreeObj, drawOutline, this, scene),
+            new Child(new Vector(mx + lenDivFour, my - lenDivFour, mz + lenDivFour), lenDivTwo, quadFourObj, drawOutline, this, scene),
+            new Child(new Vector(mx - lenDivFour, my + lenDivFour, mz - lenDivFour), lenDivTwo, quadFiveObj, drawOutline, this, scene),
+            new Child(new Vector(mx + lenDivFour, my + lenDivFour, mz - lenDivFour), lenDivTwo, quadSixObj, drawOutline, this, scene),
+            new Child(new Vector(mx - lenDivFour, my - lenDivFour, mz - lenDivFour), lenDivTwo, quadSevenObj, drawOutline, this, scene),
+            new Child(new Vector(mx + lenDivFour, my - lenDivFour, mz - lenDivFour), lenDivTwo, quadEightObj, drawOutline, this, scene)
             ]
             for (let quad of this.quads){
                 if (quad.getObjCount() != 0){
@@ -135,6 +136,13 @@ export default class Child {
     }
     getObjects(){
         return this.objects;
+    }
+    getParent(){
+        return this.parent
+    }
+    clear(){
+        this.objCount = 0
+        this.objects = []
     }
 
 

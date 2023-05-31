@@ -9,23 +9,23 @@ const Body = require('./Body').default;
 const Constants = require('./Constants').default;
 const Octree = require('./Octree').default
 let inputs = {
-  numberOfObjects: 20,
-  maxDist: 800,
+  addObject : false,
+  numberOfObjects: 2,
+  radius: 100,
+  distance: 0,
   protonIntensity: 0,
   electronIntensity: 0,
+
 };
-let oldInputs = {
-  numberOfObjects: 20,
-  protonIntensity: 0,
-  electronIntensity: 0,
-}
+
 
 
 let gui = new dat.GUI()
-
+gui.add(inputs, "addObject").name("addObjects")
 gui.add(inputs, "numberOfObjects").name("Objects").min(0)
 
-gui.add(inputs, "maxDist").name("Distance")
+gui.add(inputs, "radius").name("radius")
+gui.add(inputs, "distance").name("distance")
 gui.add(inputs, "protonIntensity").name("Proton Intensity")
 gui.add(inputs, "electronIntensity").name("Electron Intensity")
 
@@ -74,6 +74,34 @@ window.addEventListener('resize', () =>
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 })
 
+let objectPoint = new THREE.Vector3();
+window.addEventListener('mousemove', (e) => {
+
+  let direction = new THREE.Vector3();
+  camera.getWorldDirection(direction);
+
+  direction.x = direction.x * inputs.distance * 100
+  direction.y = direction.y * inputs.distance * 100
+  direction.z = direction.z * inputs.distance * 100
+
+  objectPoint.x = camera.position.x + direction.x
+  objectPoint.y = camera.position.y + direction.y
+  objectPoint.z = camera.position.z + direction.z
+
+
+  // planeNormal.copy(camera.position).normalize()
+  // plane.setFromNormalAndCoplanarPoint(planeNormal, scene.position)
+  // raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera)
+  // raycaster.ray.intersectPlane(plane, intersectionPoint)
+
+})
+
+window.addEventListener('click', (e) => {
+  if(inputs.addObject){
+    addObjects(inputs.numberOfObjects, objectPoint.x, objectPoint.y, objectPoint.z)
+
+  }
+})
 /**
  * Camera
  */
@@ -114,19 +142,9 @@ const clock = new THREE.Clock()
 
 const tick = () =>
 { 
-  let objectDelta = inputs.numberOfObjects - oldInputs.numberOfObjects
-  if (objectDelta > 0){
-    addObjects(objectDelta)
-
-  }else if (objectDelta < 0){
-    rmObjects(objects.slice(objectDelta))
-    objects = objects.slice(0, objectDelta)
-    
-  }
-  oldInputs.numberOfObjects = inputs.numberOfObjects
 
   
-  // collisionDetection()  
+  collisionDetection()  
 
 
 
@@ -135,7 +153,7 @@ const tick = () =>
     
     //create Tree
     if (objects.length > 1){
-      let tree = new Octree(objects, false, scene)
+      let tree = new Octree(objects, false, scene, window)
 
       //draw box
       const boxMaterial = new THREE.MeshBasicMaterial({ wireframe: true, color: 0xff0000});
@@ -147,7 +165,7 @@ const tick = () =>
       for (let object of objects){
         object.setAccelerationAtIndex(0, tree.computeForces(object, tree.getQuads())) 
       }
-      objects = tree.collisionDet(objects, tree.getQuads())
+      // objects = tree.collisionDet(objects, tree.getQuads())
       
     }
     
@@ -176,30 +194,25 @@ const tick = () =>
 }
 tick()
 
-function rmObjects(arr){
-  for (let body of arr){
-    let index = scene.children.findIndex(obj => obj.id==body.getId());
-    scene.children.splice(index, 1);
-  }
-}
+
 
 function setup(){
-  addObjects(inputs.numberOfObjects)
+  addObjects(inputs.numberOfObjects, 0, 0, 0)
 }
 
-function addObjects(num){
+function addObjects(num, ox, oy, oz){
 
     for (let i = 0; i <  num; i++) {
 
-    let x = -inputs.maxDist + Math.random()*inputs.maxDist*2
-    let y = -inputs.maxDist + Math.random()*inputs.maxDist*2
-    let z = -inputs.maxDist + Math.random()*inputs.maxDist*2
+    let x = ox - inputs.radius + Math.random()*inputs.radius*2
+    let y = oy - inputs.radius + Math.random()*inputs.radius*2
+    let z = oz - inputs.radius + Math.random()*inputs.radius*2
   
 
     // let mag = Math.sqrt(x*x + y*y + z*z)
     // let normal = new Vector(--x/mag, --y/mag, --z/mag)
     let normal = new Vector(-50 + Math.random()*100, -50 + Math.random()*100, -50 + Math.random()*100)
-    normal.mult(0.25)
+    normal.mult(0)
   
 
     objects.push(new Body(new Vector(x,y,z), normal,[new Vector(0,0,0), new Vector(0,0,0)], 1.67e-27, 13, scene));
@@ -262,6 +275,18 @@ function collisionDetection(){
     stack.splice(0,1)
   }
 
+}
+
+window.rmObject = function (object){
+  
+  let index = objects.findIndex(obj => obj.equals(object));
+  objects.splice(index, 1);
+
+
+}
+
+window.addObject = function (object){
+  objects.push(object)
 }
 
 function updateObjects(){
