@@ -1,7 +1,6 @@
 import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls.js';
 import * as dat from 'dat.gui'
 import { PointLightHelper } from 'three';
 const Vector = require('./Vector').default;
@@ -10,26 +9,16 @@ const Constants = require('./Constants').default;
 const Octree = require('./Octree').default
 let inputs = {
   addObject : false,
-  numberOfObjects: 4,
-  radius: 100,
-  distance: 0,
+  numberOfObjects: 2000,
+  radius: 1000,
+  distance: 50,
   protonIntensity: 0,
   electronIntensity: 0,
 
 };
 
 
-window.rmObject = function (object){
-  
-  let index = objects.findIndex(obj => obj.equals(object));
-  objects.splice(index, 1);
 
-
-}
-
-window.addObject = function (object){
-  objects.push(object)
-}
 
 
 let gui = new dat.GUI()
@@ -59,7 +48,7 @@ scene.add(ambientLight)
 /**
  * helper
  */
-// scene.add(new PointLightHelper(pointLight))
+scene.add(new PointLightHelper(pointLight))
 
 /**
  * Sizes
@@ -74,8 +63,6 @@ window.addEventListener('resize', () =>
     // Update sizes
     sizes.width = window.innerWidth
     sizes.height = window.innerHeight
-    console.log(sizes.width)
-    console.log(sizes.height)
 
     // Update camera
     camera.aspect = sizes.width / sizes.height
@@ -109,9 +96,12 @@ window.addEventListener('mousemove', (e) => {
 })
 
 window.addEventListener('click', (e) => {
-  if(inputs.addObject){
-    addObjects(inputs.numberOfObjects, objectPoint.x, objectPoint.y, objectPoint.z)
+  if (e.x < 1658 && e.y > 168){
+    
+    if(inputs.addObject){
+      addObjects(inputs.numberOfObjects, objectPoint.x, objectPoint.y, objectPoint.z)
 
+    }
   }
 })
 /**
@@ -152,8 +142,8 @@ setup()
 
 const clock = new THREE.Clock()
 
-const tick = () =>
-{ 
+const tick = () => {
+ 
 
 
   updateObjects()
@@ -170,57 +160,30 @@ const tick = () =>
       // scene.add(wireframeBox)
 
 
-
-      
+      let collisions = []
       for (let object of objects){
         let force = tree.computeForces(object, tree.getQuads())
+        let objectsCollisions = tree.collisionDet(object, object.getQuad(), object.getQuad().getSideLength())
+        collisions = collisions.concat(objectsCollisions)
         if (force){
           object.setAccelerationAtIndex(0, force) 
         }
       }
+      for (let collisionPairs of collisions){
+        if (collisionPairs[0].isAlive() && collisionPairs[1].isAlive()){
+          let newObj = newObjectFromCollision(collisionPairs[0],collisionPairs[1])
+          objects.push(newObj)
+          removeFromSceneById(collisionPairs[0].getId())
+          removeFromSceneById(collisionPairs[1].getId())
 
-      let stack = [...objects]
-      let collisions = []
-      while(stack.length > 0){
-        let object = stack[0]
-        let collisionPairs = tree.collisionDet(object, object.getQuad(), object.getQuad().getSideLength());
-        if (collisionPairs.length > 0){
-          for (let i = collisionPairs.length-1; i > 0; i--){
-            let index = stack.findIndex(obj => obj.equals(collisionPairs[i][1]));
-            if (index!=-1){
-              stack.splice(index, 1);
-            }else{
-              collisionPairs.pop();
-            }
-            
-          }
-
+          removeFromObjects(collisionPairs[0])
+          removeFromObjects(collisionPairs[1])
+          
+          collisionPairs[0].kill()
+          collisionPairs[1].kill()
         }
-        stack.shift()
-        
-        
       }
-
-
-      for (let i = 0; i < objects.length; i++){
-        let object = objects[i]
-        let collision = [];
-        
-        collision.push(tree.collisionDet(object, object.getQuad()))
-        
-        // if (collision && objects.length > 1){
-        //   tree = new Octree(objects, false, scene, window)
-        // }
-        
-      }
-      // objects = tree.collisionDet(objects, tree.getQuads())
-      
     }
-    
-  
-
-    
-
     // Update Orbital Controls
     controls.update()
 
@@ -239,6 +202,7 @@ const tick = () =>
 
     // Call tick again on the next frame
     window.requestAnimationFrame(tick)
+  
 }
 tick()
 
@@ -267,6 +231,42 @@ function addObjects(num, ox, oy, oz){
 
   }
 }
+
+function removeFromSceneById(objId){
+  let index = scene.children.findIndex(obj => obj.id==objId);
+  if (index != -1){
+    scene.children.splice(index, 1);
+  }
+}
+
+function removeFromObjects(obj){
+  let index = objects.findIndex(o => o.equals(obj));
+  if (index != -1){
+    objects.splice(index, 1);
+  }
+
+}
+
+function newObjectFromCollision(objOne, objTwo) {
+  let newRadius = Math.cbrt(Math.pow(objOne.getRadius(),3)+Math.pow(objTwo.getRadius(),3));
+
+  let pos = objOne.getPos()
+
+  let massOne = objOne.getMass()
+  let massTwo = objTwo.getMass()
+  let massSum = massOne+massTwo
+  let velOne = objOne.getVelocity()
+  let velTwo = objTwo.getVelocity()
+  let vx = (massOne * velOne.getXComp() + massTwo * velTwo.getXComp())/(massSum)
+  let vy = (massOne * velOne.getYComp() + massTwo * velTwo.getYComp())/(massSum)
+  let vz = (massOne * velOne.getZComp() + massTwo * velTwo.getZComp())/(massSum)
+  if (objOne.getRadius() < objTwo.getRadius()){
+    pos = objTwo.getPos()
+  }
+  // objects.push(new Body(new Vector((pos[0]+pos2[0])/2,(pos[1]+pos2[1])/2,(pos[2]+pos2[2])/2), new Vector(vx, vy, vz), [new Vector(0,0,0)], massSum, newRadius, scene))
+  return new Body(new Vector(pos[0],pos[1],pos[2]), new Vector(vx, vy, vz), [new Vector(0,0,0)], massSum, newRadius, scene)
+}
+
 
 
 function collisionDetection(){

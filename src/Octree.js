@@ -46,18 +46,26 @@ export default class Octree {
     }
     
     
-    collisionDet(object, quad, sideLength){
+    collisionDet(object){
        
-        if (object.getRadius() > sideLength/2){
-            let col = this.collisionDet(object, quad.getParent(), sideLength+quad.getParent().getSideLength())
-            
-            return col
-        }else{
-            let col = this.collisionDetReq(object, quad.getParent())
-            // console.log(col)
-            return col
+        let godNode = object.getQuad()
+        let sideLength = godNode.getSideLength()
+        let collisionPairs = []
+        while (object.getRadius() > sideLength/2){ // should prolly break into components 
+            godNode = godNode.getParent()
+            sideLength += godNode.getSideLength()
         }
+        let objects = godNode.getObjects()
+        for (let obj of objects){
+            if (!obj.equals(object) && obj.getDistanceTo(object) < obj.getRadius() + object.getRadius()){
+                collisionPairs.push([object, obj])
+            }
+        }
+        return collisionPairs
+            
     }
+
+
     // collisionDetReq(object, quad){
     //     for (let neighbour of quad.getQuads()){
     //         if (neighbour.getObjCount() > 1){

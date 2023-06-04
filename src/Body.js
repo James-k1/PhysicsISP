@@ -14,6 +14,7 @@ export default class Body {
     this.radius = radius;
     this.points = [];
     this.quad = null
+    this.alive = true
     this.density = mass / (Math.PI * Math.pow(radius, 2));
     this.sphere = new THREE.Mesh(
       new THREE.SphereGeometry(this.radius, 32, 32), 
@@ -170,6 +171,12 @@ export default class Body {
   }
   getQuad(){
     return this.quad
+  }
+  kill(){
+    this.alive = false
+  }
+  isAlive(){
+    return this.alive
   }
 
 
