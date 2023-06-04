@@ -44,90 +44,60 @@ export default class Octree {
         }
         return netForce;
     }
-    // computeForces(object, quads){
-    //     let netForce = new Vector(0, 0, 0);
-    //     for (let quad of quads){
-    //         if (quad.getObjCount() != 0) {
-    //             if (quad.getObjCount() == 1) {
-    //                 this.collision = false
-    //                 // this.collisionDet(quad.getObjects()[0],quad);
-    //                 if (this.collision){
-    //                     quad.clear()
-    //                     return false;
-    //                 }
-                    
-    //                 //changed to and (i dont know how logic works)
-    //                 if (!this.collision && !quad.getObjects()[0].equals(object) && quad.getSideLength()/this.distance(object.getPos(), quad.getCenterOfMass()) < theta) {
-    //                     netForce.add(object.calculateGravityAndElectroStatic(quad.getCenterOfMass(), quad.getTotalMass()))
-    //                     // netForce.add(object.calculateElectrostatic(quad.getCenterOfMass(), quad.getTotalMass()))
-    //                 }
-
-    //             } else if (quad.getObjCount() > 1){
-    //                 let force = this.computeForces(object, quad.getQuads())
-    //                 if (force)
-    //                     netForce.add(force)
-    //                 else {
-    //                     return false
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     return netForce;
-    // }
-    collisionDet(object, quad){
-        //check if sidelength is bigger than radius
-        // if it is go out a level
-        // if not pass the current quad level into another fucntion that checks for collision
-        if (object.getRadius()*2 > quad.getSideLength()){
-            let col = this.collisionDet(object, quad.getParent())
-            console.log(col)
+    
+    
+    collisionDet(object, quad, sideLength){
+       
+        if (object.getRadius() > sideLength/2){
+            let col = this.collisionDet(object, quad.getParent(), sideLength+quad.getParent().getSideLength())
+            
             return col
         }else{
             let col = this.collisionDetReq(object, quad.getParent())
-            console.log(col)
+            // console.log(col)
             return col
         }
     }
-    collisionDetReq(object, quad){
-        for (let neighbour of quad.getQuads()){
-            if (neighbour.getObjCount() > 1){
-                return this.collisionDetReq(object, neighbour)
-            }else if (neighbour.getObjCount() == 1 && !neighbour.getObjects()[0].equals(object) && neighbour.getObjects()[0].getDistanceTo(object) < object.getRadius() + neighbour.getObjects()[0].getRadius()){
-                let object2 = neighbour.getObjects()[0];
-                let pos = object.getPos()
-                let massOne = object.getMass()
-                let massTwo = object2.getMass()
-                let massSum = massOne+massTwo
-                let velOne = object.getVelocity()
-                let velTwo = object2.getVelocity()
-                let vx = (massOne * velOne.getXComp() + massTwo * velTwo.getXComp())/(massSum)
-                let vy = (massOne * velOne.getYComp() + massTwo * velTwo.getYComp())/(massSum)
-                let vz = (massOne * velOne.getZComp() + massTwo * velTwo.getZComp())/(massSum)
-                if (object.getRadius() > object2.getRadius()){
-                  pos = object.getPos()
-                }else{
-                  pos = object2.getPos()
-                }
-                let newRadius = Math.cbrt(Math.pow(object.getRadius(),3)+Math.pow(object2.getRadius(),3));
+    // collisionDetReq(object, quad){
+    //     for (let neighbour of quad.getQuads()){
+    //         if (neighbour.getObjCount() > 1){
+    //             return this.collisionDetReq(object, neighbour)
+    //         }else if (neighbour.getObjCount() == 1 && !neighbour.getObjects()[0].equals(object) && neighbour.getObjects()[0].getDistanceTo(object) < object.getRadius() + neighbour.getObjects()[0].getRadius()){
+    //             let object2 = neighbour.getObjects()[0];
+    //             let pos = object.getPos()
+    //             let massOne = object.getMass()
+    //             let massTwo = object2.getMass()
+    //             let massSum = massOne+massTwo
+    //             let velOne = object.getVelocity()
+    //             let velTwo = object2.getVelocity()
+    //             let vx = (massOne * velOne.getXComp() + massTwo * velTwo.getXComp())/(massSum)
+    //             let vy = (massOne * velOne.getYComp() + massTwo * velTwo.getYComp())/(massSum)
+    //             let vz = (massOne * velOne.getZComp() + massTwo * velTwo.getZComp())/(massSum)
+    //             if (object.getRadius() > object2.getRadius()){
+    //               pos = object.getPos()
+    //             }else{
+    //               pos = object2.getPos()
+    //             }
+    //             let newRadius = Math.cbrt(Math.pow(object.getRadius(),3)+Math.pow(object2.getRadius(),3));
 
-                let renderOne = object.getId()
-                let renderTwo = object2.getId()
-                let index = this.scene.children.findIndex(obj => obj.id==renderOne);
-                this.scene.children.splice(index, 1);
-                index = this.scene.children.findIndex(obj => obj.id==renderTwo);
-                this.scene.children.splice(index, 1);
+    //             let renderOne = object.getId()
+    //             let renderTwo = object2.getId()
+    //             let index = this.scene.children.findIndex(obj => obj.id==renderOne);
+    //             this.scene.children.splice(index, 1);
+    //             index = this.scene.children.findIndex(obj => obj.id==renderTwo);
+    //             this.scene.children.splice(index, 1);
                 
-                this.script.rmObject(object)
+    //             this.script.rmObject(object)
                 
-                this.script.rmObject(object2)
-                neighbour.clear()
+    //             this.script.rmObject(object2)
+    //             neighbour.clear()
 
-                this.script.addObject(new Body(new Vector(pos[0],pos[1],pos[2]), new Vector(vx, vy, vz), [new Vector(0,0,0)], massSum, newRadius, this.scene))
-                return true
-            }
-        }
-        return false
-    }
+    //             this.script.addObject(new Body(new Vector(pos[0],pos[1],pos[2]), new Vector(vx, vy, vz), [new Vector(0,0,0)], massSum, newRadius, this.scene))
+    //             return true
+    //         }
+    //     }
+    //     return false
+    // }
 
 
 

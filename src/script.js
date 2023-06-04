@@ -179,12 +179,35 @@ const tick = () =>
         }
       }
 
+      let stack = [...objects]
+      let collisions = []
+      while(stack.length > 0){
+        let object = stack[0]
+        let collisionPairs = tree.collisionDet(object, object.getQuad(), object.getQuad().getSideLength());
+        if (collisionPairs.length > 0){
+          for (let i = collisionPairs.length-1; i > 0; i--){
+            let index = stack.findIndex(obj => obj.equals(collisionPairs[i][1]));
+            if (index!=-1){
+              stack.splice(index, 1);
+            }else{
+              collisionPairs.pop();
+            }
+            
+          }
+
+        }
+        stack.shift()
+        
+        
+      }
+
+
       for (let i = 0; i < objects.length; i++){
-        // let object = objects[i]
-        // let collision = false;
-        // if (object.getQuad()){
-        //   collision = tree.collisionDet(object, object.getQuad())
-        // }
+        let object = objects[i]
+        let collision = [];
+        
+        collision.push(tree.collisionDet(object, object.getQuad()))
+        
         // if (collision && objects.length > 1){
         //   tree = new Octree(objects, false, scene, window)
         // }
