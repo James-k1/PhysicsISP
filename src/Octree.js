@@ -8,8 +8,10 @@ export default class Octree {
 
     constructor(objects, drawOutline, scene, script) {
         this.script = script
+        this.charge = 0
         let biggest = Math.max(Math.abs(objects[0].getPos()[0]), Math.max(Math.abs(objects[0].getPos()[1]), Math.abs(objects[0].getPos()[2])))
         for (let obj of objects) {
+            this.charge += obj.getCharge()
             let number = Math.max(Math.abs(obj.getPos()[0]), Math.abs(Math.max(obj.getPos()[1]), Math.abs(obj.getPos()[2])))
             if (biggest < number ){
                 biggest = number
@@ -33,9 +35,8 @@ export default class Octree {
             if (quad.getObjCount() != 0) {
                 if ((quad.getObjCount() == 1 && !quad.getObjects()[0].equals(object)) || quad.getSideLength()/this.distance(object.getPos(), quad.getCenterOfMass()) < theta) {
 
-                    netForce.add(object.calculateGravityAndElectroStatic(quad.getCenterOfMass(), quad.getTotalMass()))
-                    // netForce.add(object.calculateElectrostatic(quad.getCenterOfMass(), quad.getTotalMass()))
-
+                    netForce.add(object.calculateGravityAndElectroStatic(quad.getCenterOfMass(), quad.getCharge(), quad.getTotalMass()))
+                    
 
                 } else if (quad.getObjCount() > 1){
                     netForce.add(this.computeForces(object, quad.getQuads()))

@@ -7,13 +7,48 @@ const Vector = require('./Vector').default;
 const Body = require('./Body').default;
 const Constants = require('./Constants').default;
 const Octree = require('./Octree').default
+let chartData = {datasets: [ {label: 'Mass', data: [{x: 0, y: 0}]}]}
+const chartConfig = {
+  type: 'line',
+  data: chartData,
+  options: {
+    scales: {
+        y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Mass'
+            }
+            
+        },
+        x: {
+          
+          title: {
+            display: true,
+            text: 'Time'
+          }
+          
+      },
+    
+    },
+
+}
+};
+let time = 1
+let graph = new Chart(document.getElementById("graph").getContext("2d"), chartConfig)
+
+graph.update()
+
+
+
 let inputs = {
   addObject : false,
-  numberOfObjects: 2000,
+  numberOfObjects: 0,
   radius: 1000,
   distance: 50,
-  protonIntensity: 0,
-  electronIntensity: 0,
+  protonIntensity: 60,
+  electronIntensity: 60,
+  distanceScale: 7
 
 };
 
@@ -29,6 +64,7 @@ gui.add(inputs, "radius").name("radius")
 gui.add(inputs, "distance").name("distance")
 gui.add(inputs, "protonIntensity").name("Proton Intensity")
 gui.add(inputs, "electronIntensity").name("Electron Intensity")
+gui.add(inputs, "distanceScale").name("Distance Scale")
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
@@ -55,14 +91,14 @@ scene.add(new PointLightHelper(pointLight))
  */
 const sizes = {
     width: window.innerWidth,
-    height: window.innerHeight
+    height: window.innerHeight*0.8
 }
 
 window.addEventListener('resize', () =>
 {
     // Update sizes
     sizes.width = window.innerWidth
-    sizes.height = window.innerHeight
+    sizes.height = window.innerHeight*0.8
 
     // Update camera
     camera.aspect = sizes.width / sizes.height
@@ -71,6 +107,7 @@ window.addEventListener('resize', () =>
     // Update renderer
     renderer.setSize(sizes.width, sizes.height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    
 })
 
 let objectPoint = new THREE.Vector3();
@@ -99,7 +136,9 @@ window.addEventListener('click', (e) => {
   if (e.x < 1658 && e.y > 168){
     
     if(inputs.addObject){
-      addObjects(inputs.numberOfObjects, objectPoint.x, objectPoint.y, objectPoint.z)
+      console.log(inputs.protonIntensity)
+      console.log(inputs.electronIntensity)
+      addObjects(inputs.numberOfObjects, objectPoint.x, objectPoint.y, objectPoint.z, inputs.protonIntensity, inputs.electronIntensity)
 
     }
   }
@@ -144,7 +183,7 @@ const clock = new THREE.Clock()
 
 const tick = () => {
  
-
+  Constants.distanceScale = Math.pow(10,inputs.distanceScale)
 
   updateObjects()
     
@@ -209,10 +248,10 @@ tick()
 
 
 function setup(){
-  addObjects(inputs.numberOfObjects, 0, 0, 0)
+  addObjects(inputs.numberOfObjects, 0, 0, 0, inputs.protonIntensity, inputs.electronIntensity)
 }
 
-function addObjects(num, ox, oy, oz){
+function addObjects(num, ox, oy, oz, pi, ei){
 
     for (let i = 0; i <  num; i++) {
 
@@ -226,8 +265,8 @@ function addObjects(num, ox, oy, oz){
     let normal = new Vector(-50 + Math.random()*100, -50 + Math.random()*100, -50 + Math.random()*100)
     normal.mult(0)
   
-
-    objects.push(new Body(new Vector(x,y,z), normal,[new Vector(0,0,0), new Vector(0,0,0)], 1.67e-27, 13, scene));
+    
+    objects.push(new Body(new Vector(x,y,z), normal,[new Vector(0,0,0), new Vector(0,0,0)], 1.67e-27*Math.pow(10,pi), Math.pow(10,pi)-Math.pow(10,ei), 13, scene));
 
   }
 }
@@ -264,7 +303,7 @@ function newObjectFromCollision(objOne, objTwo) {
     pos = objTwo.getPos()
   }
   // objects.push(new Body(new Vector((pos[0]+pos2[0])/2,(pos[1]+pos2[1])/2,(pos[2]+pos2[2])/2), new Vector(vx, vy, vz), [new Vector(0,0,0)], massSum, newRadius, scene))
-  return new Body(new Vector(pos[0],pos[1],pos[2]), new Vector(vx, vy, vz), [new Vector(0,0,0)], massSum, newRadius, scene)
+  return new Body(new Vector(pos[0],pos[1],pos[2]), new Vector(vx, vy, vz), [new Vector(0,0,0)], massSum, Math.pow(10,inputs.protonIntensity)-Math.pow(10,inputs.electronIntensity), newRadius, scene)
 }
 
 
@@ -325,6 +364,25 @@ function collisionDetection(){
 
 }
 
+function updateChart(){
+  let max = 0
+  let chartData = {datasets: [{data: [{x: 0, y: 0}]}]}
+  for (let obj of objects){
+    if (obj.getMass() > max){
+      max = obj.getMass()
+    }
+  }
+  graph.data.labels.push(time);
+  chartConfig.data.datasets[0].data.push({x: time, y:max})
+  console.log(chartConfig.data.datasets[0])
+  time++
+  graph.update()
+  
+
+   
+
+
+}
 
 
 function updateObjects(){
@@ -337,4 +395,4 @@ function updateObjects(){
 
 
 
-
+setInterval(function() {updateChart();}, 1000); 

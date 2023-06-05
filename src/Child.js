@@ -12,7 +12,9 @@ export default class Child {
         this.scene = scene
         this.totalMass = 0; 
         this.parent = parent
+        this.charge = 0
         if (this.objCount == 1){
+            this.charge = objects[0].getCharge()
             this.objects[0].setQuad(this)
         }
         //calculate center of mass bottom up NOT top down
@@ -59,6 +61,7 @@ export default class Child {
                 scene.add(lineThree)
             }
             for (let obj of objects){
+                this.charge += obj.getCharge()
                 let x = obj.getPos()[0]
                 let y = obj.getPos()[1]
                 let z = obj.getPos()[2]
@@ -146,6 +149,9 @@ export default class Child {
     clear(){
         this.objCount = 0
         this.objects = []
+    }
+    getCharge(){
+        return this.charge
     }
 
 

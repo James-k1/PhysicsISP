@@ -6,7 +6,7 @@ export default class Body {
   //velocity is a vector 
   //acceleration is an array of vectors 
   //velocity can be an array of vectors but so far there has been no need
-  constructor(pos, velocity, acceleration, mass, radius, scene) {
+  constructor(pos, velocity, acceleration, mass, charge, radius, scene) {
     this.pos = pos;
     this.velocity = velocity;
     this.acceleration = acceleration;
@@ -15,6 +15,7 @@ export default class Body {
     this.points = [];
     this.quad = null
     this.alive = true
+    this.charge = charge
     this.density = mass / (Math.PI * Math.pow(radius, 2));
     this.sphere = new THREE.Mesh(
       new THREE.SphereGeometry(this.radius, 32, 32), 
@@ -58,18 +59,18 @@ export default class Body {
     // this.line.geometry = new THREE.BufferGeometry().setFromPoints(this.points);
   } 
   
-  calculateGravityAndElectroStatic(point, mass){
+  calculateGravityAndElectroStatic(point, charge, mass){
 
     let distanceSquared = (point[0] - this.pos.getXComp())**2 + (point[1] - this.pos.getYComp())**2 + (point[2] - this.pos.getZComp())**2 
     let distance = Math.sqrt(distanceSquared)*Constants.distanceScale
     if (distance > (this.radius*2)*Constants.distanceScale){
       let gravityMag = (Constants.G*mass)/distance**2
-      let electroStaticMag = (Constants.KTimesProtonChargeSquared)/distance**2
+      let electroStaticMag = (Constants.k * this.charge * charge)/distance**2
       let xComp = point[0] - this.pos.getXComp()
       let yComp = point[1] - this.pos.getYComp()
       let zComp = point[2] - this.pos.getZComp()
       let gravityScale = gravityMag/distance
-      let electroStaticScale = (electroStaticMag/distance)*0
+      let electroStaticScale = (electroStaticMag/distance)
       return new Vector(xComp*gravityScale - xComp*electroStaticScale, yComp*gravityScale - yComp*electroStaticScale, zComp*gravityScale - zComp*electroStaticScale)
     }
     return(new Vector(0,0,0))
@@ -177,6 +178,9 @@ export default class Body {
   }
   isAlive(){
     return this.alive
+  }
+  getCharge(){
+    return this.charge
   }
 
 
