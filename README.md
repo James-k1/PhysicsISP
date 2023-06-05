@@ -9,8 +9,10 @@ Run the following commands:
 ``` bash
 # Download repo 
 git clone https://github.com/James-k1/PhysicsISP.git
+
 # Change directory to root folder
 cd PhysicsISP
+
 # Install dependencies (only the first time)
 npm install
 
