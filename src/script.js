@@ -48,7 +48,9 @@ let inputs = {
   distance: 50,
   protonIntensity: 60,
   electronIntensity: 60,
-  distanceScale: 7
+  distanceScale: 7,
+  theta: 0.5,
+  showOctree : false
 
 };
 
@@ -57,14 +59,17 @@ let inputs = {
 
 
 let gui = new dat.GUI()
-gui.add(inputs, "addObject").name("addObjects")
-gui.add(inputs, "numberOfObjects").name("Objects").min(0)
+gui.add(inputs, "addObject").name("Add Objects")
+gui.add(inputs, "numberOfObjects").name("Object Count").min(0)
 
-gui.add(inputs, "radius").name("radius")
-gui.add(inputs, "distance").name("distance")
+gui.add(inputs, "radius").name("Radius")
+gui.add(inputs, "distance").name("Distance")
 gui.add(inputs, "protonIntensity").name("Proton Intensity")
 gui.add(inputs, "electronIntensity").name("Electron Intensity")
 gui.add(inputs, "distanceScale").name("Distance Scale")
+gui.add(inputs, "theta",0,1).name("Theta").step(0.01)
+gui.add(inputs, "showOctree").name("Show Octree")
+
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
@@ -184,12 +189,13 @@ const clock = new THREE.Clock()
 const tick = () => {
  
   Constants.distanceScale = Math.pow(10,inputs.distanceScale)
+  Constants.theta = Math.pow(10,inputs.theta)
 
   updateObjects()
     
     //create Tree
     if (objects.length > 1){
-      let tree = new Octree(objects, false, scene, window)
+      let tree = new Octree(objects, inputs.showOctree, scene, window)
 
       //draw box
       const boxMaterial = new THREE.MeshBasicMaterial({ wireframe: true, color: 0xff0000});

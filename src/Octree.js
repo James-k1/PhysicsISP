@@ -2,7 +2,7 @@ import * as THREE from 'three'
 const Child = require('./Child').default;
 const Vector = require('./Vector').default;
 const Body = require('./Body').default;
-const theta = 0.5
+const Constants = require('./Constants').default;
 
 export default class Octree {
 
@@ -33,7 +33,7 @@ export default class Octree {
         let netForce = new Vector(0, 0, 0);
         for (let quad of quads){
             if (quad.getObjCount() != 0) {
-                if ((quad.getObjCount() == 1 && !quad.getObjects()[0].equals(object)) || quad.getSideLength()/this.distance(object.getPos(), quad.getCenterOfMass()) < theta) {
+                if ((quad.getObjCount() == 1 && !quad.getObjects()[0].equals(object)) || quad.getSideLength()/this.distance(object.getPos(), quad.getCenterOfMass()) < Constants.theta) {
 
                     netForce.add(object.calculateGravityAndElectroStatic(quad.getCenterOfMass(), quad.getCharge(), quad.getTotalMass()))
                     
