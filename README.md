@@ -1,5 +1,5 @@
 # Three.js Starter
-Boiler Plate Courtesy of Bruno Simon of https://threejs-journey.xyz/
+Boiler plate courtesy of Bruno Simon of https://threejs-journey.xyz/
 
 ## Setup
 Download [Node.js](https://nodejs.org/en/download/).
