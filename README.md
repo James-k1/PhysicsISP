@@ -23,6 +23,10 @@ npm run dev
 npm run build
 ```
 ## Use
+
+Simulation:
+The simulation simulates 3 forces. Gravity, electrostatic force, and a rough repersentation of the strong force in the form of collision detection. 
+
 Navigating:
 In the center of the screen there will be a white dot. This is a light source and can help with navigating the scene. When left clicking and dragging the mouse, the camera will orbit the center point. To change the radius or how close to the dot the camera is, use the scroll wheel or use two fingers to zoom in on a touch screen. To change the center point, right click with the mouse and drag or use two fingers and drag accross the screen. Changing the center point may make it more difficult to navigate the scene as there is no fixed point to use as a reference when navigating.
 
