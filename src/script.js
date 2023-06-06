@@ -372,7 +372,6 @@ function collisionDetection(){
 
 function updateChart(){
   let max = 0
-  let chartData = {datasets: [{data: [{x: 0, y: 0}]}]}
   for (let obj of objects){
     if (obj.getMass() > max){
       max = obj.getMass()
