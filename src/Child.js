@@ -190,7 +190,7 @@ export default class Child {
         this.objects = []
     }
     /**
-     * Gives the net charge in this box
+     * gives the net charge in this box
      * @returns Double
      */
     getCharge(){

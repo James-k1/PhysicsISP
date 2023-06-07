@@ -7,10 +7,10 @@ export default class Body {
    * @param {*} pos Vector of initial position
    * @param {*} velocity Vector of initial velocity
    * @param {*} acceleration Vector of initial acceleration
-   * @param {*} mass mass in kg
-   * @param {*} charge net charge of object
-   * @param {*} radius size of the object
-   * @param {*} scene the scene from the main loop
+   * @param {*} mass Mass in kg
+   * @param {*} charge Net charge of object
+   * @param {*} radius Size of the object
+   * @param {*} scene The scene from the main loop
    */
   constructor(pos, velocity, acceleration, mass, charge, radius, scene) {
     this.pos = pos;
@@ -89,7 +89,7 @@ export default class Body {
 
   /**
    * 
-   * @param {*} b an Object
+   * @param {*} b An object
    * @returns Double
    */
   getDistanceTo(b) {
@@ -251,7 +251,7 @@ export default class Body {
     return this.quad
   }
   /**
-   * If this.alive is false, that mean this objecy has been used in a collision and should not be used in other collision or for other application
+   * If this.alive is false, that mean this object has been used in a collision and should not be used in other collision or for other application
    */
   kill(){
     this.alive = false

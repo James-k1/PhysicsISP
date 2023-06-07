@@ -198,7 +198,7 @@ const tick = () => {
     const wireframeBox = new THREE.Mesh(geometry, boxMaterial);
     wireframeBox.name = "destroy";
 
-    //strong for or collision detection
+    //strong force or collision detection
     let collisions = []
     for (let object of objects){
       let force = tree.computeForces(object, tree.getQuads())
@@ -251,7 +251,7 @@ function setup(){
 
 /**
  * 
- * @param {*} num number of objects 
+ * @param {*} num Number of objects 
  * @param {*} ox X position
  * @param {*} oy Y position
  * @param {*} oz Z position
@@ -296,10 +296,10 @@ function removeFromObjects(obj){
 }
 
 /**
- * 
+ * gives a new object that combines traits from objOne and objTwo
  * @param {*} objOne Object that collides with objTwo
  * @param {*} objTwo Object that collides with objOne
- * @returns new object that combines traits from objOne and objTwo
+ * @returns Body
  */
 function newObjectFromCollision(objOne, objTwo) {
   let newRadius = Math.cbrt(Math.pow(objOne.getRadius(),3)+Math.pow(objTwo.getRadius(),3));
@@ -317,7 +317,6 @@ function newObjectFromCollision(objOne, objTwo) {
   if (objOne.getRadius() < objTwo.getRadius()){
     pos = objTwo.getPos()
   }
-  // objects.push(new Body(new Vector((pos[0]+pos2[0])/2,(pos[1]+pos2[1])/2,(pos[2]+pos2[2])/2), new Vector(vx, vy, vz), [new Vector(0,0,0)], massSum, newRadius, scene))
   return new Body(new Vector(pos[0],pos[1],pos[2]), new Vector(vx, vy, vz), [new Vector(0,0,0)], massSum, Math.pow(10,inputs.protonIntensity)-Math.pow(10,inputs.electronIntensity), newRadius, scene)
 }
 
