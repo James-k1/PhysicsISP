@@ -5,9 +5,13 @@ const Body = require('./Body').default;
 const Constants = require('./Constants').default;
 
 export default class Octree {
-
-    constructor(objects, drawOutline, scene, script) {
-        this.script = script
+    /**
+     * 
+     * @param {*} objects Objects array from the main loop
+     * @param {*} drawOutline Boolean value determining if the octree is drawn
+     * @param {*} scene Scene object from main loop
+     */
+    constructor(objects, drawOutline, scene) {
         this.charge = 0
         let biggest = Math.max(Math.abs(objects[0].getPos()[0]), Math.max(Math.abs(objects[0].getPos()[1]), Math.abs(objects[0].getPos()[2])))
         for (let obj of objects) {
@@ -26,9 +30,14 @@ export default class Octree {
         //construct tree
         this.tree = new Child(new Vector(0, 0, 0), this.sideLength, objects, drawOutline, this, scene)
 
-
-
     }
+
+    /**
+     * 
+     * @param {*} object The object to compute the net for on
+     * @param {*} quads An array of the quadrants to search through
+     * @returns 
+     */
     computeForces(object, quads){
         let netForce = new Vector(0, 0, 0);
         for (let quad of quads){
@@ -46,13 +55,17 @@ export default class Octree {
         return netForce;
     }
     
-    
+    /**
+     * Gives an array of collision pairs formated like so: [[thisObject, objectOneThatCollides], [thisObject, objectTwoThatCollides]...]
+     * @param {*} object The obejct to find collision pairs for
+     * @returns Array
+     */
     collisionDet(object){
        
         let godNode = object.getQuad()
         let sideLength = godNode.getSideLength()
         let collisionPairs = []
-        while (object.getRadius() > sideLength/2){ // should prolly break into components 
+        while (object.getRadius() > sideLength/2){ //This could be broken into components for more accuracy however this is a good apporximation that provide a good speed boost 
             godNode = godNode.getParent()
             sideLength += godNode.getSideLength()
         }
@@ -65,55 +78,19 @@ export default class Octree {
         return collisionPairs
             
     }
-
-
-    // collisionDetReq(object, quad){
-    //     for (let neighbour of quad.getQuads()){
-    //         if (neighbour.getObjCount() > 1){
-    //             return this.collisionDetReq(object, neighbour)
-    //         }else if (neighbour.getObjCount() == 1 && !neighbour.getObjects()[0].equals(object) && neighbour.getObjects()[0].getDistanceTo(object) < object.getRadius() + neighbour.getObjects()[0].getRadius()){
-    //             let object2 = neighbour.getObjects()[0];
-    //             let pos = object.getPos()
-    //             let massOne = object.getMass()
-    //             let massTwo = object2.getMass()
-    //             let massSum = massOne+massTwo
-    //             let velOne = object.getVelocity()
-    //             let velTwo = object2.getVelocity()
-    //             let vx = (massOne * velOne.getXComp() + massTwo * velTwo.getXComp())/(massSum)
-    //             let vy = (massOne * velOne.getYComp() + massTwo * velTwo.getYComp())/(massSum)
-    //             let vz = (massOne * velOne.getZComp() + massTwo * velTwo.getZComp())/(massSum)
-    //             if (object.getRadius() > object2.getRadius()){
-    //               pos = object.getPos()
-    //             }else{
-    //               pos = object2.getPos()
-    //             }
-    //             let newRadius = Math.cbrt(Math.pow(object.getRadius(),3)+Math.pow(object2.getRadius(),3));
-
-    //             let renderOne = object.getId()
-    //             let renderTwo = object2.getId()
-    //             let index = this.scene.children.findIndex(obj => obj.id==renderOne);
-    //             this.scene.children.splice(index, 1);
-    //             index = this.scene.children.findIndex(obj => obj.id==renderTwo);
-    //             this.scene.children.splice(index, 1);
-                
-    //             this.script.rmObject(object)
-                
-    //             this.script.rmObject(object2)
-    //             neighbour.clear()
-
-    //             this.script.addObject(new Body(new Vector(pos[0],pos[1],pos[2]), new Vector(vx, vy, vz), [new Vector(0,0,0)], massSum, newRadius, this.scene))
-    //             return true
-    //         }
-    //     }
-    //     return false
-    // }
-
-
-
+    /**
+     * Give 8 quadrants
+     * @returns Array
+     */
     getQuads(){
         return this.tree.getQuads()
     }
-
+    /**
+     * 
+     * @param {*} arr1 Position array1  
+     * @param {*} arr2 Position array2
+     * @returns Double
+     */
     distance(arr1, arr2){
         return Math.sqrt( (arr2[0] - arr1[0])**2 + (arr2[1] - arr1[1])**2 + (arr2[2] - arr1[2])**2 )
 

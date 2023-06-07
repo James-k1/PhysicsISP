@@ -3,7 +3,15 @@ import * as THREE from 'three'
 const Vector = require('./Vector').default;
 
 export default class Child {
-    
+    /**
+     * 
+     * @param {*} midPoint Vector, middle of the quadrant 
+     * @param {*} sideLength Double
+     * @param {*} objects Array of the objects in this quadrant. If this is not a leaf node then it contains an array of all the objects below it.
+     * @param {*} drawOutline Boolean, to draw or not to draw octree
+     * @param {*} parent Child, Parent quad
+     * @param {*} scene Scene from main loop
+     */
     constructor(midPoint, sideLength, objects, drawOutline, parent, scene) {
         this.midPoint = midPoint;
         this.sideLength=sideLength;
@@ -96,7 +104,6 @@ export default class Child {
             //omg im loosing my mind
             let lenDivFour = lenDivTwo/2;
 
-            //there is definitly a better way to do this but im lazy
             this.quads = [new Child(new Vector(mx - lenDivFour, my + lenDivFour, mz + lenDivFour), lenDivTwo, quadOneObj, drawOutline, this, scene),
             new Child(new Vector(mx + lenDivFour, my + lenDivFour, mz + lenDivFour), lenDivTwo, quadTwoObj, drawOutline, this, scene),
             new Child(new Vector(mx - lenDivFour, my - lenDivFour, mz + lenDivFour), lenDivTwo, quadThreeObj, drawOutline, this, scene),
@@ -106,6 +113,7 @@ export default class Child {
             new Child(new Vector(mx - lenDivFour, my - lenDivFour, mz - lenDivFour), lenDivTwo, quadSevenObj, drawOutline, this, scene),
             new Child(new Vector(mx + lenDivFour, my - lenDivFour, mz - lenDivFour), lenDivTwo, quadEightObj, drawOutline, this, scene)
             ]
+            //calculates center of mass
             for (let quad of this.quads){
                 if (quad.getObjCount() != 0){
                     let quadCom = quad.getCenterOfMass();
@@ -125,31 +133,66 @@ export default class Child {
             this.totalMass = objects[0].getMass()
         }
     }
+    /**
+     * 
+     * @returns Array
+     */
     getQuads(){
         return this.quads;
     }
+    /**
+     * Gives the number of objects in the box
+     * @returns Number
+     */
     getObjCount(){
         return this.objCount;
     }
+    /**
+     * 
+     * @returns Array
+     */
     getCenterOfMass(){
         return this.centerOfMass;
     }
+    /**
+     * 
+     * @returns Number
+     */
     getTotalMass(){
         return this.totalMass;
     }
+    /**
+     * 
+     * @returns Number
+     */
     getSideLength(){
         return this.sideLength;
     }
+    /**
+     * 
+     * @returns Array
+     */
     getObjects(){
         return this.objects;
     }
+    /**
+     * 
+     * @returns Child
+     */
     getParent(){
         return this.parent
     }
+    /**
+     * clears quadrant
+     */
     clear(){
         this.objCount = 0
         this.objects = []
     }
+    /**
+     * Gives the net charge in this box
+     * @returns Double
+     */
     getCharge(){
         return this.charge
     }

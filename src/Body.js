@@ -2,10 +2,16 @@ import * as THREE from 'three'
 const Vector = require('./Vector').default;
 const Constants = require('./Constants').default
 export default class Body {
-  //pos is a vector
-  //velocity is a vector 
-  //acceleration is an array of vectors 
-  //velocity can be an array of vectors but so far there has been no need
+  /**
+   * 
+   * @param {*} pos Vector of initial position
+   * @param {*} velocity Vector of initial velocity
+   * @param {*} acceleration Vector of initial acceleration
+   * @param {*} mass mass in kg
+   * @param {*} charge net charge of object
+   * @param {*} radius size of the object
+   * @param {*} scene the scene from the main loop
+   */
   constructor(pos, velocity, acceleration, mass, charge, radius, scene) {
     this.pos = pos;
     this.velocity = velocity;
@@ -21,9 +27,6 @@ export default class Body {
       new THREE.SphereGeometry(this.radius, 32, 32), 
       new THREE.MeshStandardMaterial({roughness: 0, metalness: 0.9})
     );
-
-
-
     this.id = this.sphere.id;
     this.sphere.position.set(this.pos.getXComp(), this.pos.getYComp(), this.pos.getZComp());
     this.points.push(new THREE.Vector3(this.pos.getXComp(), this.pos.getYComp(), this.pos.getZComp()));
@@ -32,33 +35,30 @@ export default class Body {
     this.line = new THREE.Line(this.geometry, this.material);
     this.scene = scene
     this.scene.add(this.sphere);
-    // scene.add(this.line);
-    // this.path = new THREE.Line(new THREE.BufferGeometry().setFromPoints(new THREE.CatmullRomCurve3([new THREE.Vector3(this.pos.getXComp(), this.pos.getYComp(), this.pos.getZComp()),]).getPoints()), new THREE.LineBasicMaterial({ color: 0xff0000 }));
-    // scene.add(this.path)
+
   }
 
+  /**
+   * Updates positions and velocites
+   */
   update() {
     let netAcceleration = new Vector(0, 0, 0);
-    for (let vector of this.acceleration) {
-      netAcceleration.add(vector);
+      for (let vector of this.acceleration) {
+        netAcceleration.add(vector);
     }
 
     this.velocity.add(netAcceleration);
-    // this.velocity = new Vector(this.velocity.getXComp()*0.9,this.velocity.getZComp()*0.9,this.velocity.getZComp()*0.9)
-    // this.velocity.mult(deltaTime)
+
     this.pos.add(this.velocity);
-    
 
-    // if (this.points.length > 100) {
-    //   this.points.splice(0, 1);
-    // }
-    // this.points.push(new THREE.Vector3(this.pos.getXComp(), this.pos.getYComp(), this.pos.getZComp()));
-
-    // // this might stop memory leaks
-    // this.line.geometry.dispose();
-    // this.line.geometry = new THREE.BufferGeometry().setFromPoints(this.points);
   } 
-  
+  /**
+   * return the acceleration Vector of the force of gravity and electrostatic repulsion 
+   * @param {*} point The point of another object or the center of mass of a collection of objects
+   * @param {*} charge Net charge of object(s)
+   * @param {*} mass Total mass of object(s)
+   * @returns Vector
+   */
   calculateGravityAndElectroStatic(point, charge, mass){
 
     let distanceSquared = (point[0] - this.pos.getXComp())**2 + (point[1] - this.pos.getYComp())**2 + (point[2] - this.pos.getZComp())**2 
@@ -78,11 +78,20 @@ export default class Body {
         
   }
  
-
+  /**
+   * 
+   * @param {*} b An object 
+   * @returns Boolean
+   */
   equals(b) {
     return this === b;
   }
 
+  /**
+   * 
+   * @param {*} b an Object
+   * @returns Double
+   */
   getDistanceTo(b) {
     let thisPos = this.getPos();
     let thatPos = b.getPos();
@@ -92,23 +101,40 @@ export default class Body {
       + Math.pow(thisPos[2] - thatPos[2], 2)
     );
   }
-
+  /**
+   * 
+   * @returns Array
+   */
   getPos() {
     return [this.pos.getXComp(), this.pos.getYComp(), this.pos.getZComp()];
   }
-
+  /**
+   * 
+   * @param {*} pos New position as a vector
+   */
   setPos(pos) {
     this.pos = pos;
   }
 
+  /**
+   * 
+   * @returns Vector
+   */
   getVelocity() {
     return this.velocity;
   }
-
+  /**
+   * 
+   * @param {*} velocity New velocity for this object
+   */
   setVelocity(velocity) {
     this.velocity = velocity;
   }
 
+  /**
+   * 
+   * @returns Vector
+   */
   getAcceleration() {
     let netAcceleration = new Vector(0, 0);
     for (let vector of this.acceleration) {
@@ -116,69 +142,131 @@ export default class Body {
     }
     return netAcceleration;
   }
-
+  /**
+   * 
+   * @param {*} acceleration New net acceleration for this object
+   */
   setAcceleration(acceleration) {
     this.acceleration = acceleration;
   }
-
+  /**
+   * 
+   * @param {*} index Position in net acceleration array to insert acceleration
+   * @param {*} v Acceleration vector
+   */
   setAccelerationAtIndex(index, v) {
     if (index > this.acceleration.length) {
       return;
     }
     this.acceleration[index] = v;
   }
+    /**
+   * 
+   * @param {*} v Acceleration vector
+   */
   addAccelerationAtNextIndex(v) {
     this.acceleration[this.acceleration.length] = v
   }
+    /**
+   * 
+   * @param {*} index Position in net acceleration array to add acceleration
+   * @param {*} v Acceleration vector
+   */
   addAccelerationAtIndex(index, v) {
     if (index > this.acceleration.length) {
       return;
     }
     this.acceleration[index].add(v);
   }
+    /**
+   * 
+   * @param {*} index Position in net acceleration array to clear acceleration
+   */
   clearAccelerationAtIndex(index) {
     if (index > this.acceleration.length) {
       return;
     }
     this.acceleration[index] = new Vector(0, 0, 0)
   }
-
+  /**
+   * 
+   * @returns Double
+   */
   getMass() {
     return this.mass;
   }
-
+  /**
+   * 
+   * @param {*} mass New mass of this object
+   */
   setMass(mass) {
     this.mass = mass;
   }
-
+  /**
+   * 
+   * @returns Double
+   */
   getRadius() {
     return this.radius;
   }
-
+  /**
+   * 
+   * @param {*} radius New radius for this object
+   */
   setRadius(radius) {
     this.radius = radius;
   }
+  /**
+   * Updated the position of the sphear in the scene based on this objects position
+   */
   draw() {
     this.sphere.position.set(this.pos.getXComp(), this.pos.getYComp(), this.pos.getZComp());
   }
+  /**
+   * 
+   * @returns THREE.Mesh
+   */
   getRenderObject() {
     return this.sphere
   }
+  /**
+   * 
+   * @returns String
+   */
   getId() {
     return this.id
   }
+  /**
+   * 
+   * @param {*} quad The quadrent this object is in within the octree
+   */
   setQuad(quad){
     this.quad = quad
   }
+  /**
+   * 
+   * @returns Child
+   */
   getQuad(){
     return this.quad
   }
+  /**
+   * If this.alive is false, that mean this objecy has been used in a collision and should not be used in other collision or for other application
+   */
   kill(){
     this.alive = false
   }
+  /**
+   * 
+   * @returns Boolean
+   */
   isAlive(){
     return this.alive
   }
+  /**
+   * 
+   * @returns Number
+   */
   getCharge(){
     return this.charge
   }
